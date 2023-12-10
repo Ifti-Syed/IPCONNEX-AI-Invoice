@@ -41,7 +41,7 @@
         "fieldname": "gpt_balance",
         "fieldtype": "Data",
         "label": "GPT API Balance",
-        "default": "0.00",
+        "default": "0.00 $",
         "depends_on": "eval:!doc.__islocal"
        }
     ],
