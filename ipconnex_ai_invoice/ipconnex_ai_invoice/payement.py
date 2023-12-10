@@ -8,6 +8,7 @@ from frappe.utils import flt
 import stripe
 import random
 import time
+"""
 @frappe.whitelist()
 def createTaxes(taxes_account,company):#
     try:
@@ -191,4 +192,4 @@ def createTaxes(taxes_account,company):#
         return json.dumps({"message":"Taxes created successfully! ('taxes_template':"+taxes_template_name+",'tax_rule':"+tax_rule_name+")","status":"Success"})
     except : 
         return json.dumps({"message":"An error has occured while trying to create taxes","status":"Error"})
-    
+"""    

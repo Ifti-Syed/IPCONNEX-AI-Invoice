@@ -16,7 +16,7 @@ app_license = "MIT"
 doctype_js = {
 }
 
-	#"Canadian Taxes Setting" : "public/js/payement.js",
+#"Canadian Taxes Setting" : "public/js/payement.js",
 # Scheduled Tasks
 # ---------------
 
