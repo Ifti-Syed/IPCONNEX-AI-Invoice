@@ -1,0 +1,5 @@
+{
+	"js/payement.min.js": [
+		"public/js/payement_service_selector.html"
+	]
+}
