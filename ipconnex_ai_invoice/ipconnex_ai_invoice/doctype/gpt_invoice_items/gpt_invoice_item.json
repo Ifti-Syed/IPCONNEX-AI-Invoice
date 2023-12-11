@@ -1,7 +1,6 @@
 {
     "actions": [],
     "allow_rename": 1,
-    "autoname": "format:GPT-{company}-{##}",
     "creation": "2023-12-09 00:00:00.000000",
     "doctype": "DocType",
     "editable_grid": 1,
@@ -58,8 +57,16 @@
       "share": 1,
       "write": 1
      }
-    ],
+    ],    
     "istable": 1,    
+    "list_view": {
+      "fields": [
+        "item_code",
+        "item_qty",
+        "item_rate", 
+        "item_amount"
+      ]
+    },
     "quick_entry": 1,
     "sort_field": "modified",
     "sort_order": "DESC"
