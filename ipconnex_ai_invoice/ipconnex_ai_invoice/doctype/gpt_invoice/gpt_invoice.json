@@ -21,7 +21,23 @@
       "fieldtype": "Link",
       "label": "Company",
       "options":"Company"
-      },
+      },     
+      {
+        "fieldname": "gpt_account",
+        "fieldtype": "Link",
+        "label": "GPT Account",
+        "options":"GPT Account"
+      },      
+      {
+        "fieldname": "invoice_file",
+        "fieldtype": "Attach",
+        "label": "invoice_date"
+      },   
+      {
+        "fieldname": "extract_data",
+        "fieldtype": "Button",
+        "label": "Extract Data"
+       }, 
       {
        "fieldname": "invoice_type",
        "fieldtype": "Select",
@@ -33,31 +49,46 @@
         "fieldtype": "Link",
         "label": "Customer",
         "options":"Customer",
-        "depends_on": "eval:doc.invoice_type=='Purchase'"
+        "depends_on": "eval:doc.invoice_type=='Sales'"
       }, 
       {
         "fieldname": "Supplier",
         "fieldtype": "Link",
         "label": "Supplier",
         "options":"Supplier",
-        "depends_on": "eval:doc.invoice_type=='Sales'"
+        "depends_on": "eval:doc.invoice_type=='Purchase'"
       },     
       {
         "fieldname": "invoice_date",
         "fieldtype": "Date",
         "label": "Invoice Date"
       },      
-      {
-        "fieldname": "invoice_file",
-        "fieldtype": "Attach",
-        "label": "invoice_date"
-      },      
+   
       {
         "fieldname": "invoice_items",
         "fieldtype": "Table",
         "label": "Items",
         "options":"GPT Invoice Item"
+      },
+      {
+        "fieldname": "generate_invoice",
+        "fieldtype": "Button",
+        "label": "Generate Invoice"
+      }, 
+      {
+        "fieldname": "generated_sales",
+        "fieldtype": "Link",
+        "label": "Generated Sales",
+        "options":"Sales Invoice"
+      },        
+      {
+        "fieldname": "generated_purchase",
+        "fieldtype": "Link",
+        "label": "Generated Purchase",
+        "options":"Purchase Invoice"
       }
+
+
     ],
     "links": [],
     "modified": "2023-12-10 00:00:00.000000",
