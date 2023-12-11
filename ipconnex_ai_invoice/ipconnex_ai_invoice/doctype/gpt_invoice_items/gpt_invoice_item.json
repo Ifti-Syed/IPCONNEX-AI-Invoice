@@ -57,7 +57,7 @@
     "write": 1
    }
   ],
-  "parent": "Quickbooks Login", 
+  "parent": "GPT Invoice", 
   "istable": 1,    
   "list_view": {
     "fields": [
