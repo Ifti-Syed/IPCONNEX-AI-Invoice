@@ -29,13 +29,13 @@
     },
     {
       "fieldname": "item_rate",
-      "fieldtype": "Data",
-      "label": "Currency"
+      "fieldtype": "Currency",
+      "label": "Rate"
     },
     {
       "fieldname": "item_amount",
-      "fieldtype": "Data",
-      "label": "Currency"
+      "fieldtype": "Currency",
+      "label": "Amount"
     }
   ],
   "links": [],
