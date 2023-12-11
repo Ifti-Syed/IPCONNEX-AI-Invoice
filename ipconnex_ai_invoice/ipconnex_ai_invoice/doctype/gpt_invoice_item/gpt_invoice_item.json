@@ -18,7 +18,12 @@
      "fieldtype": "Link",
      "label": "Item Code",
      "options":"Item"
-    },
+    },    
+    {
+      "fieldname": "item_description",
+      "fieldtype": "Data",
+      "label": "Description"
+     },
     {
       "fieldname": "item_qty",
       "fieldtype": "Float",

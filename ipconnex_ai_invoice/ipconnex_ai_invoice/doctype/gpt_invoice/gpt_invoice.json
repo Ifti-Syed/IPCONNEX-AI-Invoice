@@ -9,10 +9,10 @@
     "field_order": [
      "gpt_account",
      "invoice_file",
+     "invoice_type",
      "extract_data",
      "company",
      "invoice_date",
-     "invoice_type",
      "customer",
      "Supplier",
      "invoice_items"

@@ -38,11 +38,10 @@
        "Mandatory":"Checked"
       },
       {
-        "fieldname": "gpt_balance",
+        "fieldname": "gpt_default_item",
         "fieldtype": "Data",
-        "label": "GPT API Balance",
-        "default": "0.00 $",
-        "depends_on": "eval:!doc.__islocal"
+        "label": "Default Item",
+        "options":"Item"
        }
     ],
     "links": [],
