@@ -2,7 +2,7 @@
   "actions": [],
   "allow_rename": 1,
   "autoname": "format:gpt-item-{#########}",
-  "creation": "2023-12-10 00:00:00.000000",
+  "creation": "2023-12-09 00:00:00.000000",
   "doctype": "DocType",
   "editable_grid": 1,
   "engine": "InnoDB",
@@ -12,7 +12,7 @@
     "item_rate", 
     "item_amount"
   ],
-  "fields": [
+  "fields": [ 
     {
      "fieldname": "item_code",
      "fieldtype": "Link",
@@ -34,7 +34,7 @@
       "fieldtype": "Data",
       "label": "Amount"
      }
-   ],
+  ],
   "links": [],
   "modified": "2023-12-10 00:00:00.000000",
   "modified_by": "Administrator",
