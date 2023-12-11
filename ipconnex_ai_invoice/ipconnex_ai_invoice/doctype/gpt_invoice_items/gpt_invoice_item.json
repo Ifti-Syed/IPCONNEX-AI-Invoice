@@ -1,73 +1,72 @@
 {
-    "actions": [],
-    "allow_rename": 1,
-    "creation": "2023-12-09 00:00:00.000000",
-    "doctype": "DocType",
-    "editable_grid": 1,
-    "engine": "InnoDB",
-    "field_order": [
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "format:gpt-item-{#########}",
+  "creation": "2023-12-10 00:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "item_code",
+    "item_qty",
+    "item_rate", 
+    "item_amount"
+  ],
+  "fields": [
+    {
+     "fieldname": "item_code",
+     "fieldtype": "Link",
+     "label": "Item Code",
+     "options":"Item"
+     },
+     {
+      "fieldname": "item_qty",
+      "fieldtype": "Check",
+      "label": "Qty"
+     },
+     {
+      "fieldname": "item_rate",
+      "fieldtype": "Currency",
+      "label": "Rate"
+     },
+     {
+      "fieldname": "item_amount",
+      "fieldtype": "Select",
+      "label": "GPT API Model",
+      "options":"gpt-3.5-turbo",
+      "Mandatory":"Checked"
+     }
+   ],
+  "links": [],
+  "modified": "2023-12-10 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "IPCONNEX AI Invoice",
+  "name": "GPT Invoice Item",
+  "owner": "Administrator",
+  "permissions": [
+   {
+    "create": 1,
+    "delete": 1,
+    "email": 1,
+    "export": 1,
+    "print": 1,
+    "read": 1,
+    "report": 1,
+    "role": "System Manager", 
+    "share": 1,
+    "write": 1
+   }
+  ],
+  "parent": "Quickbooks Login", 
+  "istable": 1,    
+  "list_view": {
+    "fields": [
       "item_code",
       "item_qty",
       "item_rate", 
       "item_amount"
-      
-    ],
-    "fields": [
-     {
-      "fieldname": "item_code",
-      "fieldtype": "Link",
-      "label": "Item Code",
-      "options":"Item"
-      },
-      {
-       "fieldname": "item_qty",
-       "fieldtype": "Check",
-       "label": "Is Main GPT Account"
-      },
-      {
-       "fieldname": "item_rate",
-       "fieldtype": "Data",
-       "label": "GPT API Key",
-       "Mandatory":"Checked"
-      },
-      {
-       "fieldname": "item_amount",
-       "fieldtype": "Select",
-       "label": "GPT API Model",
-       "options":"gpt-3.5-turbo",
-       "Mandatory":"Checked"
-      }
-    ],
-    "links": [],
-    "modified": "2023-12-10 00:00:00.000000",
-    "modified_by": "Administrator",
-    "module": "IPCONNEX AI Invoice",
-    "name": "GPT Invoice Item",
-    "owner": "Administrator",
-    "permissions": [
-     {
-      "create": 1,
-      "delete": 1,
-      "email": 1,
-      "export": 1,
-      "print": 1,
-      "read": 1,
-      "report": 1,
-      "role": "System Manager",
-      "share": 1,
-      "write": 1
-     }
-    ],    
-    "istable": 1,    
-    "list_view": {
-      "fields": [
-        "item_code",
-        "item_qty",
-        "item_rate", 
-        "item_amount"
-      ]
-    },
-    "quick_entry": 1,
-    "sort_field": "modified",
-    "sort_order": "DESC"
+    ]
+  },
+  "sort_field": "modified",
+  "sort_order": "DESC"
 }
