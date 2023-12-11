@@ -57,16 +57,6 @@
     "write": 1
    }
   ],
-  "parent": "GPT Invoice", 
-  "istable": 1,    
-  "list_view": {
-    "fields": [
-      "item_code",
-      "item_qty",
-      "item_rate", 
-      "item_amount"
-    ]
-  },
   "sort_field": "modified",
   "sort_order": "DESC"
 }

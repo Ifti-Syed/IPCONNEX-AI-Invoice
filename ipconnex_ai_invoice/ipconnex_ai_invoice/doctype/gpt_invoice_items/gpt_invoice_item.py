@@ -3,5 +3,5 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 
-class GPTInvoiceItem(Document):
+class GPTItem(Document):
     pass
