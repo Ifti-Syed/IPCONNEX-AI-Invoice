@@ -18,22 +18,25 @@
      "fieldtype": "Link",
      "label": "Item Code",
      "options":"Item"
-     },
-     {
+    },
+    {
       "fieldname": "item_qty",
-      "fieldtype": "Data",
-      "label": "Qty"
-     },
-     {
+      "fieldtype": "Float",
+      "label": "Qty",
+      "validate": {
+          "non_negative": true
+      }
+    },
+    {
       "fieldname": "item_rate",
       "fieldtype": "Data",
-      "label": "Rate"
-     },
-     {
+      "label": "Currency"
+    },
+    {
       "fieldname": "item_amount",
       "fieldtype": "Data",
-      "label": "Amount"
-     }
+      "label": "Currency"
+    }
   ],
   "links": [],
   "modified": "2023-12-10 00:00:00.000000",
