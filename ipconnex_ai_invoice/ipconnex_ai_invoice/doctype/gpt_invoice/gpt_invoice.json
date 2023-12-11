@@ -8,8 +8,12 @@
     "engine": "InnoDB",
     "field_order": [
      "company",
-     "is_main_account",
-     "gpt_key"
+     "invoice_type",
+     "customer",
+     "Supplier",
+     "invoice_date",
+     "invoice_file",
+     "invoice_items"
     ],
     "fields": [
      {
@@ -19,15 +23,40 @@
       "options":"Company"
       },
       {
+       "fieldname": "invoice_type",
+       "fieldtype": "Select",
+       "label": "Type",
+       "options":"Purchase\nSales"
+      }, 
+      {
         "fieldname": "customer",
-        "fieldtype": "Data",
-        "label": "customer",
-        "Mandatory":"Checked"
+        "fieldtype": "Link",
+        "label": "Customer",
+        "options":"Customer",
+        "depends_on": "eval:doc.invoice_type=='Purchase'"
+      }, 
+      {
+        "fieldname": "Supplier",
+        "fieldtype": "Link",
+        "label": "Supplier",
+        "options":"Supplier",
+        "depends_on": "eval:doc.invoice_type=='Sales'"
+      },     
+      {
+        "fieldname": "invoice_date",
+        "fieldtype": "Date",
+        "label": "Invoice Date"
       },      
       {
-        "fieldname": "Date",
-        "fieldtype": "Date",
+        "fieldname": "invoice_file",
+        "fieldtype": "Attach",
         "label": "invoice_date"
+      },      
+      {
+        "fieldname": "invoice_items",
+        "fieldtype": "Table",
+        "label": "Items",
+        "options":"Invoice Items"
       }
     ],
     "links": [],
