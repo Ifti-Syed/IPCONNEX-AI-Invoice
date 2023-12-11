@@ -39,7 +39,7 @@
       },
       {
         "fieldname": "gpt_default_item",
-        "fieldtype": "Data",
+        "fieldtype": "Link",
         "label": "Default Item",
         "options":"Item"
        }
