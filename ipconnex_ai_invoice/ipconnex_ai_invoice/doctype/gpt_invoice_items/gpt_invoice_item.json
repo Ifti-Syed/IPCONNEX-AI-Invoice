@@ -21,20 +21,18 @@
      },
      {
       "fieldname": "item_qty",
-      "fieldtype": "Check",
+      "fieldtype": "Data",
       "label": "Qty"
      },
      {
       "fieldname": "item_rate",
-      "fieldtype": "Currency",
+      "fieldtype": "Data",
       "label": "Rate"
      },
      {
       "fieldname": "item_amount",
-      "fieldtype": "Select",
-      "label": "GPT API Model",
-      "options":"gpt-3.5-turbo",
-      "Mandatory":"Checked"
+      "fieldtype": "Data",
+      "label": "Amount"
      }
    ],
   "links": [],
