@@ -56,7 +56,7 @@
         "fieldname": "invoice_items",
         "fieldtype": "Table",
         "label": "Items",
-        "options":"Invoice Items"
+        "options":"GPT Invoice Item"
       }
     ],
     "links": [],
