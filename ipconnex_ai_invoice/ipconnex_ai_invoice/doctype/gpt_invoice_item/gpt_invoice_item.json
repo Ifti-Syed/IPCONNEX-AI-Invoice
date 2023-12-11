@@ -54,7 +54,16 @@
     "share": 1,
     "write": 1
    }
-  ],
+  ],    
+  "istable": 1,    
+  "list_view": {
+    "fields": [
+      "item_code",
+      "item_qty",
+      "item_rate", 
+      "item_amount"
+    ]
+  },
   "sort_field": "modified",
   "sort_order": "DESC"
 }
