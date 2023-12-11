@@ -7,12 +7,14 @@
     "editable_grid": 1,
     "engine": "InnoDB",
     "field_order": [
+     "gpt_account",
+     "invoice_file",
+     "extract_data",
      "company",
+     "invoice_date",
      "invoice_type",
      "customer",
      "Supplier",
-     "invoice_date",
-     "invoice_file",
      "invoice_items"
     ],
     "fields": [
@@ -31,13 +33,18 @@
       {
         "fieldname": "invoice_file",
         "fieldtype": "Attach",
-        "label": "invoice_date"
+        "label": "Join an Invoice File"
       },   
       {
         "fieldname": "extract_data",
         "fieldtype": "Button",
         "label": "Extract Data"
-       }, 
+      },  
+      {
+         "fieldname": "invoice_date",
+         "fieldtype": "Date",
+         "label": "Invoice Date"
+      },   
       {
        "fieldname": "invoice_type",
        "fieldtype": "Select",
@@ -57,13 +64,7 @@
         "label": "Supplier",
         "options":"Supplier",
         "depends_on": "eval:doc.invoice_type=='Purchase'"
-      },     
-      {
-        "fieldname": "invoice_date",
-        "fieldtype": "Date",
-        "label": "Invoice Date"
-      },      
-   
+      }, 
       {
         "fieldname": "invoice_items",
         "fieldtype": "Table",
@@ -73,19 +74,22 @@
       {
         "fieldname": "generate_invoice",
         "fieldtype": "Button",
-        "label": "Generate Invoice"
+        "label": "Generate Invoice",
+        "depends_on": "eval:doc.invoice_items && doc.invoice_date && !doc.generated_sales && !doc.generated_purchase"
       }, 
       {
         "fieldname": "generated_sales",
         "fieldtype": "Link",
         "label": "Generated Sales",
-        "options":"Sales Invoice"
+        "options":"Sales Invoice",
+        "depends_on": "eval:doc.generated_sales"
       },        
       {
         "fieldname": "generated_purchase",
         "fieldtype": "Link",
         "label": "Generated Purchase",
-        "options":"Purchase Invoice"
+        "options":"Purchase Invoice",
+        "depends_on": "eval:doc.generated_purchase"
       }
 
 
