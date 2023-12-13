@@ -13,7 +13,7 @@ frappe.ui.form.on('GPT Invoice', {
             }
             $("button[data-fieldname='extract_data']").prop("disabled",true);
                 let field_empty=false;
-                if(!cur_frm.doc.gpt_account){
+                if(!frm.doc.gpt_account){
                     $("input[data-fieldname='gpt_account']").css({
                         "border-color": "red",
                         "border-width": "1px",
@@ -21,7 +21,7 @@ frappe.ui.form.on('GPT Invoice', {
                     });
                     field_empty=true;
                 }
-                if(!cur_frm.doc.invoice_file){
+                if(!frm.doc.invoice_file){
                     $("div[data-fieldname='invoice_file']").find("div[class='control-input']").css({
                         "border-color": "red",
                         "border-width": "1px",
@@ -59,13 +59,22 @@ frappe.ui.form.on('GPT Invoice', {
                     "border-width": "1px",
                     "border-style": "solid"
                 });
+                setTimeout(()=>{
+                    $("input[data-fieldname='gpt_account']").css({
+                        "border": "None",
+                    });
+                    $("div[data-fieldname='invoice_file']").find("div[class='control-input']").css({
+                        "border": "None",
+                    });
+
+                }, 4000);
                 frappe.call(
                     {
                         method: "ipconnex_ai_invoice.ipconnex_ai_invoice.extract.extractPDFData",
                         args:{
-                            "doc_name":cur_frm.doc.invoice_type=="Purchase"?"Supplier":"Customer",
-                            "pdf_path":cur_frm.doc.invoice_file,
-                            "account_name":cur_frm.doc.gpt_account,
+                            "doc_name":frm.doc.invoice_type=="Purchase"?"Supplier":"Customer",
+                            "pdf_path":frm.doc.invoice_file,
+                            "account_name":frm.doc.gpt_account,
                 
                             },            
                     callback: function(response) {  
@@ -74,6 +83,37 @@ frappe.ui.form.on('GPT Invoice', {
                             console.log("todo fill fields");
                             console.log(res_json["message"]);
                             //todo fill fields using res_json["message"]
+                            try{
+                                if( frm.doc.invoice_type=="Purchase"){
+                                    rm.set_value({"supplier_name":res_json["message"]["company"]})
+                                }            
+                                if( frm.doc.invoice_type=="Sales"){
+                                    rm.set_value({"customer_name":res_json["message"]["company"]})
+                                }
+
+                            }catch(e){
+                            }
+
+                            try{
+
+                                cur_frm.set_value({"invoice_date":res_json["message"]['invoice_date']})
+                            }catch(e){
+                            }
+                            try{
+
+                                let items=res_json["message"]['invoice_items'];
+                                frappe.db.get_value("GPT Account","GPT-IPCo-842","gpt_default_item").then((response)=>{ 
+                                    console.log("default item : "+response.message.gpt_default_item);  
+                                    for(let i in items){
+                                        console.log(items[i]);
+                                    }
+                                })
+                            }catch(e){
+                                console.log(e)
+                            }
+
+
+
 
 
                         }else{
@@ -83,9 +123,8 @@ frappe.ui.form.on('GPT Invoice', {
                                 icon: 'error',
                             });
                         }
-                    
+                        $("button[data-fieldname='extract_data']").prop("disabled",false);
                     }});
-                $("button[data-fieldname='extract_data']").prop("disabled",false);
             });
         $("button[data-fieldname='generate_invoice']").click((e)=>{
             if($("button[data-fieldname='generate_invoice']").prop("disabled")){

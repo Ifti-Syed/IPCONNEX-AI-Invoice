@@ -52,14 +52,14 @@
        "options":"Purchase\nSales"
       }, 
       {
-        "fieldname": "customer",
+        "fieldname": "customer_name",
         "fieldtype": "Link",
         "label": "Customer",
         "options":"Customer",
         "depends_on": "eval:doc.invoice_type=='Sales'"
       }, 
       {
-        "fieldname": "Supplier",
+        "fieldname": "supplier_name",
         "fieldtype": "Link",
         "label": "Supplier",
         "options":"Supplier",

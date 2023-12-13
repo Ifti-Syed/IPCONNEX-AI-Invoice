@@ -52,7 +52,7 @@ def extractPDFData(doc_name,pdf_path,account_name):
     except :
         return json.dumps({"status":"0","message":"Failed to read PDF"})
     try:
-        question = "Give me all details of this invoice in an JSON format. I want the JSON to contain this info with this keys: {'company': company , 'invoice_date': invoice_date, 'invoice_items': {'item_description': item_description, 'amount': amount} }. Here's a list of all customers, choose the one that fits best: " + ', '.join(companies) +  ". Here's a text extracted from an invoice pdf document: " + pdf_text
+        question = "Give me all details of this invoice in an JSON format. I want the JSON to contain this info with this keys: {'company': company , 'invoice_date': 'yyyy-mm-dd', 'invoice_items': {'item_description': item_description, 'amount': amount} }. Here's a list of all customers, choose the one that fits best: " + ', '.join(companies) +  ". Here's a text extracted from an invoice pdf document: " + pdf_text
         answer = ask_chatgpt(question,model,api_key).choices[0].message.content
     except :
         return json.dumps({"status":"0","message":"There is an error while using ChatGPT API "})
