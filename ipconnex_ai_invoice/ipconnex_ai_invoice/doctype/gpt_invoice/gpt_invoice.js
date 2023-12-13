@@ -3,7 +3,23 @@ frappe.ui.form.on('GPT Invoice', {
 
         $("input[data-fieldname='generated_sales']").prop("disabled",true);
         $("input[data-fieldname='generated_purchase']").prop("disabled",true);
+    },
+    gpt_account:function(frm){
+        if(frm.doc.gpt_account){
+            frappe.db.get_value("GPT Account",frm.doc.gpt_account,"company").then((response)=>{
+                try{
+                    frm.set_value({"company":response.message.company})
+                }catch(e){
+                }
+            })
+            
+    
+        }
+
+
     }
+    
+
 });
 frappe.ui.form.on('GPT Invoice Item', {
     item_code: function(frm, cdt, cdn) { 

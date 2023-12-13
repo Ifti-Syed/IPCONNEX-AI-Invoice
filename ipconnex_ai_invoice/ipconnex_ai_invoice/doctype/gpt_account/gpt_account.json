@@ -8,7 +8,6 @@
     "engine": "InnoDB",
     "field_order": [
      "company",
-     "is_main_account",
      "gpt_model",
      "gpt_key",
      "gpt_default_item",
@@ -21,11 +20,6 @@
       "label": "Company",
       "Mandatory":"Checked",
       "options":"Company"
-      },
-      {
-       "fieldname": "is_main_account",
-       "fieldtype": "Check",
-       "label": "Is Main GPT Account"
       },
       {
        "fieldname": "gpt_key",

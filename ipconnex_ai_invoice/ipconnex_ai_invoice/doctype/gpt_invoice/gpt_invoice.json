@@ -8,10 +8,10 @@
     "engine": "InnoDB",
     "field_order": [
      "gpt_account",
+     "company",
      "invoice_file",
      "invoice_type",
      "extract_data",
-     "company",
      "invoice_date",
      "customer",
      "Supplier",
