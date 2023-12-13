@@ -45,16 +45,16 @@ def extractPDFData(doc_name,pdf_path,account_name):
     except :
         return json.dumps({"status":"0","message":"Failed to get GPT Account data "})
     
-    #try :
-    companies=[ company["name"] for company in frappe.db.get_all(doc_name,fields=['name']) ]
-    pdf_text = extract_text_from_pdf(pdf_path)    
-    """except :
-        return json.dumps({"status":"0","message":"Failed to read PDF"})"""
-
-    question = "Give me all details of this invoice in an JSON format. I want the JSON to contain this info with this keys: {'company': company , 'invoice_date': invoice_date, 'invoice_items': {'item_description': item_description, 'amount': amount} }. Here's a list of all customers, choose the one that fits best: " + ', '.join(companies) +  ". Here's a text extracted from an invoice pdf document: " + pdf_text
-    answer = ask_chatgpt(question,model,api_key).choices[0].message.content
-    """except :
-        return json.dumps({"status":"0","message":"There is an error "})"""
+    try :
+        companies=[ company["name"] for company in frappe.db.get_all(doc_name,fields=['name']) ]
+        pdf_text = extract_text_from_pdf(pdf_path)    
+    except :
+        return json.dumps({"status":"0","message":"Failed to read PDF"})
+    try:
+        question = "Give me all details of this invoice in an JSON format. I want the JSON to contain this info with this keys: {'company': company , 'invoice_date': invoice_date, 'invoice_items': {'item_description': item_description, 'amount': amount} }. Here's a list of all customers, choose the one that fits best: " + ', '.join(companies) +  ". Here's a text extracted from an invoice pdf document: " + pdf_text
+        answer = ask_chatgpt(question,model,api_key).choices[0].message.content
+    except :
+        return json.dumps({"status":"0","message":"There is an error "})
     return json.dumps({"status":"1","message":""+answer})
 
 
@@ -63,10 +63,8 @@ import os
 
 @frappe.whitelist()
 def getSiteName():
-    try:
-        # Run the bench command to get the current site
-        result = os.popen('bench current-site').read().strip()
-        return json.dumps({"status":"1","message":""+result})
+    try: 
+        return json.dumps({"status":"1","message":""+frappe.local.site})
     except Exception as e:
         return json.dumps({"status":"0","message":"error"})
 
