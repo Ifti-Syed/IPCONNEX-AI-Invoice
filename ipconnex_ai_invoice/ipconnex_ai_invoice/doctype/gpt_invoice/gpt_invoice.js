@@ -1,5 +1,7 @@
 frappe.ui.form.on('GPT Invoice', {
     refresh: function(frm) {        
+
+
         var scriptElement = document.createElement('script');
         scriptElement.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js';
         document.head.appendChild(scriptElement);
@@ -26,6 +28,7 @@ frappe.ui.form.on('GPT Invoice', {
                         "border-style": "solid"
                     });
                     field_empty=true;
+
                 }
 
                 if(field_empty){
@@ -34,6 +37,16 @@ frappe.ui.form.on('GPT Invoice', {
                         title: 'Empty fields!',
                         text: 'Please fill empty fields first',
                     });
+                    setTimeout(()=>{
+                        $("input[data-fieldname='gpt_account']").css({
+                            "border": "None",
+                        });
+                        $("div[data-fieldname='invoice_file']").find("div[class='control-input']").css({
+                            "border": "None",
+                        });
+
+                    }, 4000);
+                    $("button[data-fieldname='extract_data']").prop("disabled",false);
                     return;
                 }
                 $("input[data-fieldname='gpt_account']").css({
