@@ -9,7 +9,7 @@ frappe.ui.form.on('GPT Account', {
                 {
                     method: "ipconnex_ai_invoice.ipconnex_ai_invoice.extract.getSiteName",
                     callback: function(response) {
-                    res_json=JSON.parse(response.message);
+                    let res_json=JSON.parse(response.message);
                     if(res_json["status"]){
                         cur_frm.set_value({"storage_dir":res_json["message"]});
                     }else{
