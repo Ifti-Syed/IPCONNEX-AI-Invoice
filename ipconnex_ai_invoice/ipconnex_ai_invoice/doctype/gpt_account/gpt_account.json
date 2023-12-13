@@ -47,9 +47,9 @@
         "options":"Item"
        },
        {
-         "fieldname": "erp_site_name",
+         "fieldname": "storage_dir",
          "fieldtype": "Data",
-         "label": "Site Name"
+         "label": "Storage Directory"
         }
     ],
     "links": [],
