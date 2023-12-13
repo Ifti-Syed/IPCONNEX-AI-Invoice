@@ -17,7 +17,7 @@ frappe.ui.form.on('GPT Invoice', {
                         "border-width": "1px",
                         "border-style": "solid"
                     });
-                    field_empty=false;
+                    field_empty=true;
                 }
                 if(!cur_frm.doc.invoice_file){
                     $("div[data-fieldname='invoice_file']").find("div[class='control-input']").css({
@@ -25,7 +25,7 @@ frappe.ui.form.on('GPT Invoice', {
                         "border-width": "1px",
                         "border-style": "solid"
                     });
-                    field_empty=false;
+                    field_empty=true;
                 }
 
                 if(field_empty){
@@ -58,9 +58,9 @@ frappe.ui.form.on('GPT Invoice', {
                     callback: function(response) {  
                         let res_json=JSON.parse(response.message);
                         if(res_json["status"]){
-                            console.log("todo fill fields")
+                            console.log("todo fill fields");
                             console.log(res_json["message"]);
-                            //todo fill fields  using res_json["message"]
+                            //todo fill fields using res_json["message"]
 
 
                         }else{
@@ -79,18 +79,6 @@ frappe.ui.form.on('GPT Invoice', {
                 return;
             }
             $("button[data-fieldname='generate_invoice']").prop("disabled",true);  
-            if( frm.doc.invoice_type=="Sales"){
-                console.log("Generate Sales Invoice");
-                /* TODO insert Sales Invoice
-                frappe.db.insert({
-
-
-
-                    "doctype":"Sales Invoice"
-                }).then(response()=>{})*/
-
-
-            }
             if( frm.doc.invoice_type=="Purchase"){
                 
                 console.log("Generate Purchase Invoice");
