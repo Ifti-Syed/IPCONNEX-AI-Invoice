@@ -65,7 +65,8 @@ import os
 @frappe.whitelist()
 def getSiteName():
     try: 
-        return json.dumps({"status":"1","message":"/home/frappe/frappe-bench/sites/"+frappe.get_site_path(frappe.local.site)})
+        return json.dumps({"status":"1",
+                           "message":"/home/frappe/frappe-bench/sites/"+frappe.get_site_path()+(""+frappe.local.site)[1:]})
     except Exception as e:
         return json.dumps({"status":"0","message":"error"})
 
