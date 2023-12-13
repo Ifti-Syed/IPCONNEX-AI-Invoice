@@ -72,50 +72,55 @@ frappe.ui.form.on('GPT Invoice', {
                     {
                         method: "ipconnex_ai_invoice.ipconnex_ai_invoice.extract.extractPDFData",
                         args:{
-                            "doc_name":frm.doc.invoice_type=="Purchase"?"Supplier":"Customer",
-                            "pdf_path":frm.doc.invoice_file,
-                            "account_name":frm.doc.gpt_account,
+                            "doc_name":cur_frm.doc.invoice_type=="Purchase"?"Supplier":"Customer",
+                            "pdf_path":cur_frm.doc.invoice_file,
+                            "account_name":cur_frm.doc.gpt_account,
                 
                             },            
                     callback: function(response) {  
                         let res_json=JSON.parse(response.message);
                         if(res_json["status"]){
                             console.log("todo fill fields");
-                            console.log(res_json["message"]);
+                            let invoice_data=JSON.parse(res_json["message"])
+                            console.log();
                             //todo fill fields using res_json["message"]
                             try{
-                                if( frm.doc.invoice_type=="Purchase"){
-                                    rm.set_value({"supplier_name":res_json["message"]["company"]})
+                                if( cur_frm.doc.invoice_type=="Purchase"){
+                                    cur_frm.set_value({"supplier_name":invoice_data["company"]});
                                 }            
-                                if( frm.doc.invoice_type=="Sales"){
-                                    rm.set_value({"customer_name":res_json["message"]["company"]})
+                                if( cur_frm.doc.invoice_type=="Sales"){
+                                    cur_frm.set_value({"customer_name":invoice_data["company"]});
                                 }
 
                             }catch(e){
+                                console.log(e);
                             }
 
                             try{
-
-                                cur_frm.set_value({"invoice_date":res_json["message"]['invoice_date']})
+                                cur_frm.set_value({"invoice_date":invoice_data['invoice_date']})
                             }catch(e){
+                                console.log(e);
                             }
                             try{
 
-                                let items=res_json["message"]['invoice_items'];
+                                let items=invoice_data['invoice_items'];
                                 frappe.db.get_value("GPT Account","GPT-IPCo-842","gpt_default_item").then((response)=>{ 
-                                    console.log("default item : "+response.message.gpt_default_item);  
-                                    for(let i in items){
-                                        console.log(items[i]);
-                                    }
+                                let invoice_items=[];
+                                for(let i in items){
+                                    invoice_items.push({
+                                        "item_code":  response.message.gpt_default_item  ,
+                                        "item_description":items[i].item_description,
+                                        "item_qty": 1    ,
+                                        "item_rate": items[i].amount  , 
+                                        "item_amount":items[i].amount
+                                    });
+                                }
+                                    
+                                cur_frm.set_value({"invoice_items":invoice_items});
                                 })
                             }catch(e){
-                                console.log(e)
+                                console.log(e);
                             }
-
-
-
-
-
                         }else{
                             Swal.fire({
                                 title: 'Fail !',

@@ -8,6 +8,7 @@
   "engine": "InnoDB",
   "field_order": [
     "item_code",
+    "item_description",
     "item_qty",
     "item_rate", 
     "item_amount"

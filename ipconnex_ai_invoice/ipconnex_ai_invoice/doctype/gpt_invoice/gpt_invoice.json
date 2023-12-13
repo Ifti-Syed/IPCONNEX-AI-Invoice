@@ -12,9 +12,9 @@
      "invoice_file",
      "invoice_type",
      "extract_data",
+     "customer_name",
+     "supplier_name",
      "invoice_date",
-     "customer",
-     "Supplier",
      "invoice_items"
     ],
     "fields": [ 
