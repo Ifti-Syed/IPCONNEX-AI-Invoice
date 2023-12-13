@@ -28,8 +28,11 @@ def extract_text_from_pdf(pdf_path):
 @frappe.whitelist()
 def extractPDFData(pdf_path,doc_name):
     companies=[ company["customer_name"] for company in frappe.db.get_all(doc_name,fields=['customer_name'])   ]
-    text=extract_text_from_pdf(pdf_path)
-    return json.dumps({"success":"DoNe "+text})
+    #text=extract_text_from_pdf(pdf_path)
+    import os
+    script_directory = os.path.dirname(__file__)
+
+    return json.dumps({"success":"DoNe "+script_directory })
 
 """
 @frappe.whitelist()
