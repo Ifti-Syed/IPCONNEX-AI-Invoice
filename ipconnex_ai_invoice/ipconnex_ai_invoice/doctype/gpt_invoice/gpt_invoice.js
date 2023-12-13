@@ -145,7 +145,15 @@ frappe.ui.form.on('GPT Invoice', {
 
 
                     "doctype":"Purchase Invoice"
-                }).then(response()=>{})*/
+                }).then((response)=>{
+                    TODO replace the static value with the new purchase name 
+                    cur_frm.set_value({"generated_sales":"ACC-SINV-2023-00001"});
+                    cur_frm.save()
+
+
+                })
+                
+                */
 
 
             }            
@@ -157,7 +165,13 @@ frappe.ui.form.on('GPT Invoice', {
 
 
                     "doctype":"Sales Invoice"
-                }).then(response()=>{})*/
+                }).then((response)=>{
+                    TODO replace the static value with the new purchase name 
+                    cur_frm.set_value({"generated_purchase":"ACC-SINV-2023-00001"});
+                    cur_frm.save()
+
+
+                })*/
 
 
             }
