@@ -12,11 +12,8 @@ from PyPDF2 import PdfReader
 from openai import OpenAI
 
 @frappe.whitelist()
-def extractPDFData(pdf_path,doc_name):
-
+def extractPDFData():
     companies=[ company["customer_name"] for company in frappe.db.get_all(doc_name,fields=['customer_name'])   ]
-
-    return json.dumps({"success":"DoNe "+", ".join(companies)})
 
 
 """

@@ -9,7 +9,9 @@
     "field_order": [
      "company",
      "is_main_account",
-     "gpt_key"
+     "gpt_model",
+     "gpt_key",
+     "gpt_default_item"
     ],
     "fields": [
      {
