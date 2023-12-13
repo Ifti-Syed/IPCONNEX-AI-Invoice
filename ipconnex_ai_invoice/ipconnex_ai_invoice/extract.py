@@ -24,7 +24,7 @@ def extract_text_from_pdf(pdf_path):
     return text
 
 def ask_chatgpt(question,model,api_key):
-    client = OpenAI(api_key)
+    client = OpenAI(api_key=api_key)
     chat_completion = client.chat.completions.create(
         messages=[
             {
