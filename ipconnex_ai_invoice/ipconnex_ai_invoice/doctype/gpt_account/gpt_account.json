@@ -11,7 +11,8 @@
      "is_main_account",
      "gpt_model",
      "gpt_key",
-     "gpt_default_item"
+     "gpt_default_item",
+     "erp_site_name"
     ],
     "fields": [
      {
@@ -44,7 +45,12 @@
         "fieldtype": "Link",
         "label": "Default Item",
         "options":"Item"
-       }
+       },
+       {
+         "fieldname": "erp_site_name",
+         "fieldtype": "Data",
+         "label": "Site Name"
+        }
     ],
     "links": [],
     "modified": "2023-12-10 00:00:00.000000",
