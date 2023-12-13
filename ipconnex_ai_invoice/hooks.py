@@ -9,7 +9,7 @@ app_icon = "octicon octicon-file-directory"
 app_color = "grey"
 app_email = "voip@ipconnex.com"
 app_license = "MIT"
-
+app_version = '0.0.1'
 
 # include js in doctype views
 # TODO Fill here 'doctype' : 'path_to_clientscript.js'

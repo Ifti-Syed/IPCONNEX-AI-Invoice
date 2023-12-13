@@ -39,7 +39,7 @@
         "fieldname": "extract_data",
         "fieldtype": "Button",
         "label": "Extract Data",
-        "depends_on": "eval: !doc.invoice_items && !doc.invoice_date && !doc.supplier_name "
+        "depends_on": "eval: !doc.invoice_items.length && !doc.invoice_date && !doc.supplier_name "
       },  
       {
          "fieldname": "invoice_date",
