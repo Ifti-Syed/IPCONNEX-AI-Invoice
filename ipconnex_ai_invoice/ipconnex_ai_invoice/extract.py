@@ -11,10 +11,25 @@ import time
 from PyPDF2 import PdfReader 
 from openai import OpenAI
 
-@frappe.whitelist()
-def extractPDFData():
-    companies=[ company["customer_name"] for company in frappe.db.get_all(doc_name,fields=['customer_name'])   ]
 
+
+
+def extract_text_from_pdf(pdf_path):
+    with open(pdf_path, 'rb') as file:
+        pdf_reader = PdfReader(file)
+        text = ''
+        for page_num in range(len(pdf_reader.pages)):
+            page = pdf_reader.pages[page_num]
+            text += page.extract_text()
+    return text
+
+
+
+@frappe.whitelist()
+def extractPDFData(pdf_path,doc_name):
+    companies=[ company["customer_name"] for company in frappe.db.get_all(doc_name,fields=['customer_name'])   ]
+    text=extract_text_from_pdf(pdf_path)
+    return json.dumps({"success":"DoNe "+text})
 
 """
 @frappe.whitelist()
