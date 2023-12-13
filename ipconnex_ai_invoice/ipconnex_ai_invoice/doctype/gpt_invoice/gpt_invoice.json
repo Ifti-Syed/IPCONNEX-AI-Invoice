@@ -17,19 +17,19 @@
      "Supplier",
      "invoice_items"
     ],
-    "fields": [
-     {
-      "fieldname": "company",
-      "fieldtype": "Link",
-      "label": "Company",
-      "options":"Company"
-      },     
+    "fields": [ 
       {
         "fieldname": "gpt_account",
         "fieldtype": "Link",
         "label": "GPT Account",
         "options":"GPT Account"
-      },      
+      },   
+      {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options":"Company"
+      },       
       {
         "fieldname": "invoice_file",
         "fieldtype": "Attach",

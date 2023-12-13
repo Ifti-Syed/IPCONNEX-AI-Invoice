@@ -38,11 +38,13 @@
         "fieldname": "gpt_default_item",
         "fieldtype": "Link",
         "label": "Default Item",
+        "Mandatory":"Checked",
         "options":"Item"
        },
        {
          "fieldname": "storage_dir",
          "fieldtype": "Data",
+         "Mandatory":"Checked",
          "label": "Storage Directory"
         }
     ],

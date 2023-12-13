@@ -15,7 +15,7 @@ frappe.ui.form.on('GPT Account', {
                     }else{
                         Swal.fire({
                             title: 'Fail !',
-                            text: 'We got an error while trying to get the default storage path',
+                            text: res_json["message"],
                             icon: 'error',
                         });
                     }

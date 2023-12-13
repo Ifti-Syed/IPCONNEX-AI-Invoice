@@ -68,6 +68,6 @@ def getSiteName():
         return json.dumps({"status":"1",
                            "message":"/home/frappe/frappe-bench/sites/"+(frappe.local.site)})
     except Exception as e:
-        return json.dumps({"status":"0","message":"error"})
+        return json.dumps({"status":"0","message":'We got an error while trying to get the default storage path'})
 
 
