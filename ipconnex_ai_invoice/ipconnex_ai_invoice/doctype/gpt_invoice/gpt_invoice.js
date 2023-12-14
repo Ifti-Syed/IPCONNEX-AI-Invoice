@@ -209,7 +209,7 @@ frappe.ui.form.on('GPT Invoice Item', {
                 frm.refresh_field("invoice_items");
                 let amount=0;
                     for(let i in frm.doc.invoice_items ){
-                        amount+=parseInt(frm.doc.invoice_items*100);
+                        amount+=parseInt(frm.doc.invoice_items[i].item_amount*100);
                     }
                 frm.set_value({"invoice_total_amount":amount/100})
             });
@@ -220,7 +220,7 @@ frappe.ui.form.on('GPT Invoice Item', {
             frm.refresh_field("invoice_items");
             let amount=0;
                 for(let i in frm.doc.invoice_items ){
-                    amount+=parseInt(frm.doc.invoice_items*100);
+                    amount+=parseInt(frm.doc.invoice_items[i].item_amount*100);
                 }
             frm.set_value({"invoice_total_amount":amount/100})
             
@@ -231,7 +231,7 @@ frappe.ui.form.on('GPT Invoice Item', {
         frm.refresh_field("invoice_items");
         let amount=0;
             for(let i in frm.doc.invoice_items ){
-                amount+=parseInt(frm.doc.invoice_items*100);
+                amount+=parseInt(frm.doc.invoice_items[i].item_amount*100);
             }
             frm.set_value({"invoice_total_amount":amount/100})
         
