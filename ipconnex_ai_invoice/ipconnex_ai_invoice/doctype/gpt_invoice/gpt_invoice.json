@@ -73,10 +73,15 @@
         "options":"GPT Invoice Item"
       },
       {
+        "fieldname": "invoice_total_amount",
+        "fieldtype": "Currency",
+        "label": "Total Amount"
+      },
+      {
         "fieldname": "generate_invoice",
         "fieldtype": "Button",
         "label": "Generate Invoice",
-        "depends_on": "eval:doc.invoice_items && doc.invoice_date && !doc.generated_sales && !doc.generated_purchase"
+        "depends_on": "eval:doc.invoice_items.length && doc.invoice_date && !doc.generated_sales && !doc.generated_purchase"
       }, 
       {
         "fieldname": "generated_sales",

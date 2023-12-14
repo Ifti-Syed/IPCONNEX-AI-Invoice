@@ -59,9 +59,6 @@ def extractPDFData(doc_name,pdf_path,account_name):
     return json.dumps({"status":"1","message":""+answer})
 
 
-
-import os
-
 @frappe.whitelist()
 def getSiteName():
     try: 

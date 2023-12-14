@@ -197,7 +197,12 @@ frappe.ui.form.on('GPT Invoice', {
                 }
             })
         }
+    },
+    invoice_items:function(frm){
+        console.log("table edited");
+
     }
+
 });
 frappe.ui.form.on('GPT Invoice Item', {
     item_code: function(frm, cdt, cdn) { 
