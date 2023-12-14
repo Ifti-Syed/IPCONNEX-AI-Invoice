@@ -72,9 +72,9 @@ frappe.ui.form.on('GPT Invoice', {
                     {
                         method: "ipconnex_ai_invoice.ipconnex_ai_invoice.extract.extractPDFData",
                         args:{
-                            "doc_name":cur_frm.doc.invoice_type=="Purchase"?"Supplier":"Customer",
-                            "pdf_path":cur_frm.doc.invoice_file,
-                            "account_name":cur_frm.doc.gpt_account,
+                            "doc_name":frm.doc.invoice_type=="Purchase"?"Supplier":"Customer",
+                            "pdf_path":frm.doc.invoice_file,
+                            "account_name":frm.doc.gpt_account,
                 
                             },            
                     callback: function(response) {  
@@ -83,11 +83,11 @@ frappe.ui.form.on('GPT Invoice', {
                             let invoice_data=JSON.parse(res_json["message"])
                             console.log();
                             try{
-                                if( cur_frm.doc.invoice_type=="Purchase"){
-                                    cur_frm.set_value({"supplier_name":invoice_data["company"]});
+                                if( frm.doc.invoice_type=="Purchase"){
+                                    frm.set_value({"supplier_name":invoice_data["company"]});
                                 }            
-                                if( cur_frm.doc.invoice_type=="Sales"){
-                                    cur_frm.set_value({"customer_name":invoice_data["company"]});
+                                if( frm.doc.invoice_type=="Sales"){
+                                    frm.set_value({"customer_name":invoice_data["company"]});
                                 }
 
                             }catch(e){
@@ -95,7 +95,7 @@ frappe.ui.form.on('GPT Invoice', {
                             }
 
                             try{
-                                cur_frm.set_value({"invoice_date":invoice_data['invoice_date']})
+                                frm.set_value({"invoice_date":invoice_data['invoice_date']})
                             }catch(e){
                                 console.log(e);
                             }
@@ -103,9 +103,12 @@ frappe.ui.form.on('GPT Invoice', {
 
                                 let items=invoice_data['invoice_items'];
                                 console.log(items);
+                                let amount= 0 ;
                                 frappe.db.get_value("GPT Account","GPT-IPCo-842","gpt_default_item").then((response)=>{ 
                                 let invoice_items=[];
                                 for(let i in items){
+
+                                    amount+=parseInt(items[i].amount*100);
                                     invoice_items.push({
                                         "item_code":  response.message.gpt_default_item  ,
                                         "item_description":items[i].item_description,
@@ -115,7 +118,8 @@ frappe.ui.form.on('GPT Invoice', {
                                     });
                                 }
                                     
-                                cur_frm.set_value({"invoice_items":invoice_items});
+                                frm.set_value({"invoice_items":invoice_items});
+                                frm.set_value({"invoice_total_amount":amount/100});
                                 })
                             }catch(e){
                                 console.log(e);
@@ -146,8 +150,8 @@ frappe.ui.form.on('GPT Invoice', {
                     "doctype":"Purchase Invoice"
                 }).then((response)=>{
                     TODO replace the static value with the new purchase name 
-                    cur_frm.set_value({"generated_sales":"ACC-SINV-2023-00001"});
-                    cur_frm.save()
+                    frm.set_value({"generated_sales":"ACC-SINV-2023-00001"});
+                    frm.save()
 
 
                 })
@@ -166,8 +170,8 @@ frappe.ui.form.on('GPT Invoice', {
                     "doctype":"Sales Invoice"
                 }).then((response)=>{
                     TODO replace the static value with the new purchase name 
-                    cur_frm.set_value({"generated_purchase":"ACC-SINV-2023-00001"});
-                    cur_frm.save()
+                    frm.set_value({"generated_purchase":"ACC-SINV-2023-00001"});
+                    frm.save()
 
 
                 })*/
@@ -222,7 +226,6 @@ frappe.ui.form.on('GPT Invoice Item', {
                     amount+=parseInt(frm.doc.invoice_items[i].item_amount*100);
                 }
             frm.set_value({"invoice_total_amount":amount/100})
-            
     },
     item_rate: function(frm, cdt, cdn) { 
         let item=locals[cdt][cdn];
