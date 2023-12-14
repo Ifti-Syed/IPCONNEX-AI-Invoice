@@ -100,7 +100,6 @@ frappe.ui.form.on('GPT Invoice', {
                                 console.log(e);
                             }
                             try{
-
                                 let items=invoice_data['invoice_items'];
                                 console.log(items);
                                 let amount= 0 ;
@@ -117,7 +116,6 @@ frappe.ui.form.on('GPT Invoice', {
                                         "item_amount":items[i].amount
                                     });
                                 }
-                                    
                                 frm.set_value({"invoice_items":invoice_items});
                                 frm.set_value({"invoice_total_amount":amount/100});
                                 })
