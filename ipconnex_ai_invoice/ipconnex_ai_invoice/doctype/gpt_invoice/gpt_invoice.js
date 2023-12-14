@@ -138,7 +138,6 @@ frappe.ui.form.on('GPT Invoice', {
             }
             $("button[data-fieldname='generate_invoice']").prop("disabled",true);  
             if( frm.doc.invoice_type=="Purchase"){
-                
                 console.log("Generate Purchase Invoice");
                 /*
                 frappe.db.insert({
@@ -155,8 +154,6 @@ frappe.ui.form.on('GPT Invoice', {
                 })
                 
                 */
-
-
             }            
             if( frm.doc.invoice_type=="Sales"){
                 console.log("Generate Sales Invoice");
