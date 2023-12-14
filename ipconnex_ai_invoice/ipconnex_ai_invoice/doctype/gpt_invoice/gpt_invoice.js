@@ -198,11 +198,6 @@ frappe.ui.form.on('GPT Invoice', {
             })
         }
     },
-    invoice_items:function(frm){
-        console.log("table edited");
-
-    }
-
 });
 frappe.ui.form.on('GPT Invoice Item', {
     item_code: function(frm, cdt, cdn) { 
@@ -211,18 +206,35 @@ frappe.ui.form.on('GPT Invoice Item', {
               item.item_rate=res.standard_rate;
               item.item_qty=1;
               item.item_amount=res.standard_rate;
-              frm.refresh_field("invoice_items");
+              frm.refresh_field("invoice_items").then((res)=>{
+                let amount=0;
+                for(let i in frm.doc.invoice_items ){
+                    amount+=parseInt(frm.doc.invoice_items*100);
+                }
+                frm.set_value({"invoice_total_amount":amount/100})
+              });
             });
     },
     item_qty: function(frm, cdt, cdn) { 
             let item=locals[cdt][cdn];
             item.item_amount=item.item_rate*item.item_qty;
-            frm.refresh_field("invoice_items");
+            frm.refresh_field("invoice_items").then((res)=>{
+                let amount=0;
+                for(let i in frm.doc.invoice_items ){
+                    amount+=parseInt(frm.doc.invoice_items*100);
+                }
+                frm.set_value({"invoice_total_amount":amount/100})
+        });
     },
     item_rate: function(frm, cdt, cdn) { 
         let item=locals[cdt][cdn];
         item.item_amount=item.item_rate*item.item_qty;
-        frm.refresh_field("invoice_items");
-    },
-    
+        frm.refresh_field("invoice_items").then((res)=>{
+            let amount=0;
+            for(let i in frm.doc.invoice_items ){
+                amount+=parseInt(frm.doc.invoice_items*100);
+            }
+            frm.set_value({"invoice_total_amount":amount/100})
+        });
+    }
 });
