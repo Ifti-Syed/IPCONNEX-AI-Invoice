@@ -80,10 +80,8 @@ frappe.ui.form.on('GPT Invoice', {
                     callback: function(response) {  
                         let res_json=JSON.parse(response.message);
                         if(res_json["status"]){
-                            console.log("todo fill fields");
                             let invoice_data=JSON.parse(res_json["message"])
                             console.log();
-                            //todo fill fields using res_json["message"]
                             try{
                                 if( cur_frm.doc.invoice_type=="Purchase"){
                                     cur_frm.set_value({"supplier_name":invoice_data["company"]});
@@ -104,6 +102,7 @@ frappe.ui.form.on('GPT Invoice', {
                             try{
 
                                 let items=invoice_data['invoice_items'];
+                                console.log(items);
                                 frappe.db.get_value("GPT Account","GPT-IPCo-842","gpt_default_item").then((response)=>{ 
                                 let invoice_items=[];
                                 for(let i in items){
