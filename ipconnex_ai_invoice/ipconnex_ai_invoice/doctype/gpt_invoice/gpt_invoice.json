@@ -39,7 +39,7 @@
         "fieldname": "extract_data",
         "fieldtype": "Button",
         "label": "Extract Data",
-        "depends_on": "eval: !doc.invoice_items.length && !doc.invoice_date && !doc.supplier_name "
+        "depends_on": "eval:!doc.invoice_date && !doc.supplier_name "
       },  
       {
          "fieldname": "invoice_date",
@@ -81,7 +81,7 @@
         "fieldname": "generate_invoice",
         "fieldtype": "Button",
         "label": "Generate Invoice",
-        "depends_on": "eval:doc.invoice_items.length && doc.invoice_date && !doc.generated_sales && !doc.generated_purchase"
+        "depends_on": "eval:doc.invoice_date && !doc.generated_sales && !doc.generated_purchase"
       }, 
       {
         "fieldname": "generated_sales",
