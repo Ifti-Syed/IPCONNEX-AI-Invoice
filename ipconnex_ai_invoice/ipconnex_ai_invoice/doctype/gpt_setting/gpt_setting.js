@@ -1,10 +1,9 @@
-frappe.ui.form.on('GPT Account', {
+frappe.ui.form.on('GPT Setting', {
     refresh: function(frm) {
         var scriptElement = document.createElement('script');
         scriptElement.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js';
         document.head.appendChild(scriptElement);
-
-        if(frm.doc.name.startsWith("new-gpt-account-")){
+        if(!frm.doc.storage_dir){
             frappe.call(
                 {
                     method: "ipconnex_ai_invoice.ipconnex_ai_invoice.extract.getSiteName",
