@@ -7,7 +7,7 @@ frappe.ui.form.on('GPT Invoice', {
         document.head.appendChild(scriptElement);
         $("input[data-fieldname='generated_sales']").prop("disabled",true);
         $("input[data-fieldname='generated_purchase']").prop("disabled",true);
-        $("button[data-fieldname='extract_data']").click((e)=>{
+        $("button[data-fieldname='extract_data']").off('click').on('click',(e)=>{
             if($("button[data-fieldname='extract_data']").prop("disabled")){
                 return;
             }
@@ -132,7 +132,7 @@ frappe.ui.form.on('GPT Invoice', {
                         $("button[data-fieldname='extract_data']").prop("disabled",false);
                     }});
             });
-        $("button[data-fieldname='generate_invoice']").click((e)=>{
+        $("button[data-fieldname='generate_invoice']").off('click').on('click',(e)=>{
             if($("button[data-fieldname='generate_invoice']").prop("disabled")){
                 return;
             }
