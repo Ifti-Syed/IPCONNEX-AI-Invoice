@@ -103,7 +103,7 @@ frappe.ui.form.on('GPT Invoice', {
                                 let items=invoice_data['invoice_items'];
                                 console.log(items);
                                 let amount= 0 ;
-                                frappe.db.get_value("GPT Account","GPT-IPCo-842","gpt_default_item").then((response)=>{ 
+                                frappe.db.get_value("GPT Account",frm.doc.gpt_account,"gpt_default_item").then((response)=>{ 
                                 let invoice_items=[];
                                 for(let i in items){
 
@@ -148,7 +148,7 @@ frappe.ui.form.on('GPT Invoice', {
                 }).then((response)=>{
                     TODO replace the static value with the new purchase name 
                     frm.set_value({"generated_sales":"ACC-SINV-2023-00001"});
-                    frm.save()
+                    frm.save();
 
 
                 })
@@ -166,7 +166,8 @@ frappe.ui.form.on('GPT Invoice', {
                 }).then((response)=>{
                     TODO replace the static value with the new purchase name 
                     frm.set_value({"generated_purchase":"ACC-SINV-2023-00001"});
-                    frm.save()
+                    frm.save();
+
 
 
                 })*/
