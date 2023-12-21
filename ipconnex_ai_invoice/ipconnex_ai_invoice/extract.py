@@ -52,7 +52,7 @@ def extractPDFData(doc_name,pdf_path,account_name):
     except :
         return json.dumps({"status":"0","message":"Failed to read PDF"})
     try:
-        question = "Please give me all details of this invoice in an JSON format. I want the JSON to contain this info with this keys: {'company': company , 'invoice_date': 'yyyy-mm-dd', 'invoice_items': [{'item_description': item_description ,'rate': rate ,'duration':duration ,'amount': charges}]} . items must be an array of objects. take attention for amounts written with spaces each 3 numbers like  1 000 000.00  . make sure to not specify the currency in ammounts. make sure the result could be parsed as json  . Here's a list of all customers, choose the one that fits best: " + ', '.join(companies) +  ". and here's a text extracted from an invoice pdf document: " + pdf_text
+        question = "Please give me all details of this invoice in an JSON format. I want the JSON to contain this info with this keys: {'company': company , 'invoice_date': 'yyyy-mm-dd', 'invoice_items': [{'item_description': item_description ,'rate': rate ,'duration':duration ,'amount': charges}]} . items must be an array of objects without including the total . take attention for amounts written with spaces each 3 numbers like  1 000 000.00  . make sure to not specify the currency in ammounts. make sure the result could be parsed as json  . Here's a list of all customers, choose the one that fits best: " + ', '.join(companies) +  ". and here's a text extracted from an invoice pdf document: " + pdf_text
         answer = ask_chatgpt(question,model,api_key).choices[0].message.content
     except :
         return json.dumps({"status":"0","message":"There is an error while using ChatGPT API "})
