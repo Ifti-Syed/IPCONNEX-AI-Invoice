@@ -61,6 +61,13 @@
         "depends_on": "eval:doc.invoice_type=='Sales'"
       }, 
       {
+        "fieldname": "income_account",
+        "fieldtype": "Link",
+        "label": "Income Account",
+        "options":"Account",
+        "depends_on": "eval:doc.invoice_type=='Sales'"
+      }, 
+      {
         "fieldname": "supplier_name",
         "fieldtype": "Link",
         "label": "Supplier",

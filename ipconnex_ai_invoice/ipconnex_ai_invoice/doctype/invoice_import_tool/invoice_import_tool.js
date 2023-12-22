@@ -78,7 +78,6 @@ frappe.ui.form.on('Invoice Import Tool', {
                         let res_json=JSON.parse(response.message);
                         if(res_json["status"]){
                             let invoice_data=JSON.parse(res_json["message"])
-                            console.log();
                             try{
                                 if( frm.doc.invoice_type=="Purchase"){
                                     frm.set_value({"supplier_name":invoice_data["company"]});
@@ -127,6 +126,69 @@ frappe.ui.form.on('Invoice Import Tool', {
                         $("button[data-fieldname='extract_data']").prop("disabled",false);
                     }});
             });
+
+            $("button[data-fieldname='generate_invoice']").off('click').on('click',(e)=>{
+                if($("button[data-fieldname='generate_invoice']").prop("disabled")){
+                    return;
+                }
+                let items= frm.doc.invoice_items;
+                let inv_items=[];
+                for(let i in items){
+                    if(!items[i].item_code){
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Empty fields !',
+                            text: 'Please fill item codes first',
+                        });
+                        return;
+                    }
+                    let inv_item= {
+                            'item_code': items[i].item_code,
+                            'qty': 1.0,
+                            'description':items[i].description,
+                            'rate': items[i].rate,
+                            'amount': items[i].rate ,
+                        }
+                    if( frm.doc.invoice_type=="Sales"){
+                        inv_item['income_account']=frm.doc.income_account;
+                    }
+                    inv_items.push(inv_item);
+                }
+                $("button[data-fieldname='generate_invoice']").prop("disabled",true); 
+                let due_date_obj= new Date( cur_frm.doc.invoice_date);
+                due_date_obj.setDate( due_date_obj.getDate() + 30);
+                let due_date=due_date_obj.toISOString().split('T')[0];
+
+    
+                if( frm.doc.invoice_type=="Purchase"){
+                    frappe.db.insert({
+                        'supplier': frm.doc.supplier_name,
+                        'posting_date': cur_frm.doc.invoice_date,
+                        'due_date': due_date,
+                        'company': frm.doc.company,
+                        'currency': frm.doc.currency,
+                        'items': inv_items,
+                        "doctype":"Purchase Invoice"
+                    }).then((response)=>{
+                        frm.set_value({"generated_purchase":response.name});
+                        frm.save();
+                    });
+                }            
+                if( frm.doc.invoice_type=="Sales"){
+                    frappe.db.insert({
+                        'customer': frm.doc.customer_name,
+                        'posting_date': cur_frm.doc.invoice_date,
+                        'due_date': due_date,
+                        'company': frm.doc.company,
+                        'items': inv_items,
+                        "doctype":"Sales Invoice"
+                    }).then((response)=>{
+                        frm.set_value({"generated_sales":response.name});
+                        frm.save();
+                    });
+                }
+                $("button[data-fieldname='generate_invoice']").prop("disabled",false);
+            });
     },
     gpt_account:function(frm){
         if(frm.doc.gpt_account){
@@ -140,45 +202,40 @@ frappe.ui.form.on('Invoice Import Tool', {
     },
 });
 frappe.ui.form.on('Invoice Import Tool Item', {
-    /*item_code: function(frm, cdt, cdn) { 
-            let item=locals[cdt][cdn];
-            frappe.db.get_doc("Item",item.item_code).then((res)=>{
-                item.item_rate=res.standard_rate;
-                item.item_qty=1;
-                item.item_amount=res.standard_rate;
-                frm.refresh_field("invoice_items");
-                let amount=0;
-                    for(let i in frm.doc.invoice_items ){
-                        amount+=parseInt(frm.doc.invoice_items[i].item_amount*100);
-                    }
-                frm.set_value({"invoice_total_amount":amount/100})
-            });
-    },*/
     item_qty: function(frm, cdt, cdn) { 
+        setTimeout(function() {
             let item=locals[cdt][cdn];
             item.item_amount=item.item_rate*item.item_qty;
             frm.refresh_field("invoice_items");
             let amount=0;
                 for(let i in frm.doc.invoice_items ){
-                    amount+=parseInt(frm.doc.invoice_items[i].item_amount*100);
+                    let inv_item=frm.doc.invoice_items[i]
+                    amount+=parseInt(inv_item.item_amount*100)*inv_item.item_qty;
                 }
-            frm.set_value({"invoice_total_amount":amount/100})
+            frm.set_value({"invoice_total_amount":amount/100});        
+        }, 300);
     },
     item_rate: function(frm, cdt, cdn) { 
-        let item=locals[cdt][cdn];
-        item.item_amount=item.item_rate*item.item_qty;
-        frm.refresh_field("invoice_items");
-        let amount=0;
+        setTimeout(function() {
+            let item=locals[cdt][cdn];
+            item.item_amount=item.item_rate*item.item_qty;
+            frm.refresh_field("invoice_items");
+            let amount=0;
+                for(let i in frm.doc.invoice_items ){
+                    let inv_item=frm.doc.invoice_items[i]
+                    amount+=parseInt(inv_item.item_amount*100)*inv_item.item_qty;
+                }
+                frm.set_value({"invoice_total_amount":amount/100});
+        }, 300);
+    },
+    invoice_items_remove:function(frm, cdt, cdn){
+        setTimeout(function() {
+            let amount=0;
             for(let i in frm.doc.invoice_items ){
                 amount+=parseInt(frm.doc.invoice_items[i].item_amount*100);
             }
-            frm.set_value({"invoice_total_amount":amount/100})
-    },
-    invoice_items_remove:function(frm, cdt, cdn){
-        let amount=0;
-        for(let i in frm.doc.invoice_items ){
-            amount+=parseInt(frm.doc.invoice_items[i].item_amount*100);
-        }
-        frm.set_value({"invoice_total_amount":amount/100});
+            frm.set_value({"invoice_total_amount":amount/100});
+        }, 300);
+
     },
 });
