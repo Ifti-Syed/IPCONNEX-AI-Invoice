@@ -28,7 +28,6 @@ frappe.ui.form.on('Invoice Import Tool', {
                     field_empty=true;
 
                 }
-
                 if(field_empty){
                     Swal.fire({
                         icon: 'warning',
@@ -148,9 +147,6 @@ frappe.ui.form.on('Invoice Import Tool', {
                         'item_code': items[i].item_code,
                         'qty': 1.0,
                         'description':items[i].description,
-                        'income_account': 'Sales - FONO' ,
-                        'conversion_factor': 1.0,
-                        'cost_center': 'Main - FONO' ,
                         'rate': items[i].rate,
                         'amount': items[i].rate ,
                     })
@@ -158,57 +154,44 @@ frappe.ui.form.on('Invoice Import Tool', {
 
 
 
-
-
-
             $("button[data-fieldname='generate_invoice']").prop("disabled",true);  
             if( frm.doc.invoice_type=="Purchase"){
                 console.log("Generate Purchase Invoice");
-                /*
+                
                 frappe.db.insert({
-
-
-
+                    "currency":"currency",
+                    'customer': frm.doc.customer_name,
+                    'posting_date': '2023-12-23',
+                    'due_date': '2023-12-30',
+                    'company': frm.doc.company,
+                    'currency': frm.doc.currency,
+                    'items': inv_items,
                     "doctype":"Purchase Invoice"
                 }).then((response)=>{
-                    TODO replace the static value with the new purchase name 
-                    frm.set_value({"generated_sales":"ACC-SINV-2023-00001"});
+                    //TODO replace the static value with the new purchase name 
+                    console.log(response.message);
+                    frm.set_value({"generated_sales":response.message.name});
                     frm.save();
-
-
                 })
                 
-                */
+                
             }            
             if( frm.doc.invoice_type=="Sales"){
                 console.log("Generate Sales Invoice");
-
-                /* TODO insert Sales Invoice
+                // TODO insert Sales Invoice
                 frappe.db.insert({
-
-                    'title': 'customerName',
-
-                    'customer': 'customerName',
-
-                    'due_date': '2022-10-12',
-
-                    'company': 'Fonotel Communications Inc.',
-
-                    'taxes_and_charges': 'Canada QST 14.975% - FONO',
-
-                    'items': [
-
-
-                    ]
+                    'customer': frm.doc.customer_name,
+                    'posting_date': '2023-12-23',
+                    'due_date': '2023-12-30',
+                    'company': frm.doc.company,
+                    'items': inv_items,
                     "doctype":"Sales Invoice"
                 }).then((response)=>{
-                    TODO replace the static value with the new purchase name 
-                    frm.set_value({"generated_purchase":"ACC-SINV-2023-00001"});
+                    //TODO replace the static value with the new purchase name 
+                    console.log(response.message);
+                    frm.set_value({"generated_purchase":response.message.name});
                     frm.save();
-
-
-
-                })*/
+                });
             }
             $("button[data-fieldname='generate_invoice']").prop("disabled",false);
         })
