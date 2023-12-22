@@ -169,16 +169,9 @@ frappe.ui.form.on('Invoice Import Tool', {
 
 
                 })*/
-
-
             }
             $("button[data-fieldname='generate_invoice']").prop("disabled",false);
         })
-
-
-
-
-
     },
     gpt_account:function(frm){
         if(frm.doc.gpt_account){
@@ -227,6 +220,7 @@ frappe.ui.form.on('Invoice Import Tool Item', {
             frm.set_value({"invoice_total_amount":amount/100})
     },
     items_remove:function(frm, cdt, cdn){
+        let amount=0;
         for(let i in frm.doc.invoice_items ){
             amount+=parseInt(frm.doc.invoice_items[i].item_amount*100);
         }
