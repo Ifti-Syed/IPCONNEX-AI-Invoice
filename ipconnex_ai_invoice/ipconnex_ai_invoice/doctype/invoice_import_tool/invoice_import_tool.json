@@ -83,6 +83,16 @@
         "fieldname": "invoice_total_amount",
         "fieldtype": "Currency",
         "label": "Total Amount"
+      },      
+      {
+        "fieldname": "extracted_amount",
+        "fieldtype": "Currency",
+        "label": "Extracted Amount"
+      },      
+      {
+        "fieldname": "difference",
+        "fieldtype": "Currency",
+        "label": "Difference"
       },
       {
         "fieldname": "generate_invoice",
