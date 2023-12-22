@@ -1,10 +1,8 @@
+var scriptElement = document.createElement('script');
+scriptElement.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js';
+document.head.appendChild(scriptElement);
 frappe.ui.form.on('Invoice Import Tool', {
     refresh: function(frm) {        
-
-
-        var scriptElement = document.createElement('script');
-        scriptElement.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js';
-        document.head.appendChild(scriptElement);
         $("input[data-fieldname='generated_sales']").prop("disabled",true);
         $("input[data-fieldname='generated_purchase']").prop("disabled",true);
         $("button[data-fieldname='extract_data']").off('click').on('click',(e)=>{
@@ -134,6 +132,35 @@ frappe.ui.form.on('Invoice Import Tool', {
             if($("button[data-fieldname='generate_invoice']").prop("disabled")){
                 return;
             }
+            let items= frm.doc.invoice_items;
+            let inv_items=[];
+            for(let i in items){
+                if(!items[i].item_code){
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Empty fields !',
+                        text: 'Please fill item codes first',
+                    });
+                    return;
+                }
+                inv_items.push(
+                    {
+                        'item_code': items[i].item_code,
+                        'qty': 1.0,
+                        'description':items[i].description,
+                        'income_account': 'Sales - FONO' ,
+                        'conversion_factor': 1.0,
+                        'cost_center': 'Main - FONO' ,
+                        'rate': items[i].rate,
+                        'amount': items[i].rate ,
+                    })
+            }
+
+
+
+
+
+
             $("button[data-fieldname='generate_invoice']").prop("disabled",true);  
             if( frm.doc.invoice_type=="Purchase"){
                 console.log("Generate Purchase Invoice");
@@ -155,11 +182,24 @@ frappe.ui.form.on('Invoice Import Tool', {
             }            
             if( frm.doc.invoice_type=="Sales"){
                 console.log("Generate Sales Invoice");
+
                 /* TODO insert Sales Invoice
                 frappe.db.insert({
 
+                    'title': 'customerName',
+
+                    'customer': 'customerName',
+
+                    'due_date': '2022-10-12',
+
+                    'company': 'Fonotel Communications Inc.',
+
+                    'taxes_and_charges': 'Canada QST 14.975% - FONO',
+
+                    'items': [
 
 
+                    ]
                     "doctype":"Sales Invoice"
                 }).then((response)=>{
                     TODO replace the static value with the new purchase name 

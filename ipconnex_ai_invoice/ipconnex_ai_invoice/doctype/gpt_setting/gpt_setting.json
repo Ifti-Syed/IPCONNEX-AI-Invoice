@@ -10,7 +10,6 @@
      "company",
      "gpt_model",
      "gpt_key",
-     "gpt_default_item",
      "erp_site_name"
     ],
     "fields": [
@@ -34,13 +33,6 @@
        "options":"gpt-3.5-turbo",
        "Mandatory":"Checked"
       },
-      {
-        "fieldname": "gpt_default_item",
-        "fieldtype": "Link",
-        "label": "Default Item",
-        "Mandatory":"Checked",
-        "options":"Item"
-       },
        {
          "fieldname": "storage_dir",
          "fieldtype": "Data",
