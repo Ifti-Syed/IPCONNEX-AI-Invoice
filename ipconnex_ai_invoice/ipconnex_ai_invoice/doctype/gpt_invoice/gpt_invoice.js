@@ -1,4 +1,4 @@
-frappe.ui.form.on('GPT Invoice', {
+frappe.ui.form.on('Invoice Import Tool', {
     refresh: function(frm) {        
 
 
@@ -198,7 +198,7 @@ frappe.ui.form.on('GPT Invoice', {
         }
     },
 });
-frappe.ui.form.on('GPT Invoice Item', {
+frappe.ui.form.on('Invoice Import Tool Item', {
     item_code: function(frm, cdt, cdn) { 
             let item=locals[cdt][cdn];
             frappe.db.get_doc("Item",item.item_code).then((res)=>{
