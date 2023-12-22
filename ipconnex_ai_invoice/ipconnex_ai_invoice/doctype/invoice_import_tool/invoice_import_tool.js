@@ -160,7 +160,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                 
                 frappe.db.insert({
                     "currency":"currency",
-                    'customer': frm.doc.customer_name,
+                    'supplier': frm.doc.supplier_name,
                     'posting_date': '2023-12-23',
                     'due_date': '2023-12-30',
                     'company': frm.doc.company,
@@ -181,7 +181,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                 // TODO insert Sales Invoice
                 frappe.db.insert({
                     'customer': frm.doc.customer_name,
-                    'posting_date': '2023-12-23',
+                    'posting_date': cur_frm.doc.invoice_date,
                     'due_date': '2023-12-30',
                     'company': frm.doc.company,
                     'items': inv_items,
