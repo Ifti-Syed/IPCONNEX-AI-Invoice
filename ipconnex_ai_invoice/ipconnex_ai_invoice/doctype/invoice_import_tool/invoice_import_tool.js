@@ -219,7 +219,7 @@ frappe.ui.form.on('Invoice Import Tool Item', {
             }
             frm.set_value({"invoice_total_amount":amount/100})
     },
-    items_remove:function(frm, cdt, cdn){
+    invoice_items_remove:function(frm, cdt, cdn){
         let amount=0;
         for(let i in frm.doc.invoice_items ){
             amount+=parseInt(frm.doc.invoice_items[i].item_amount*100);
