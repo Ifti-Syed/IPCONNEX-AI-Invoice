@@ -21,8 +21,8 @@
       {
         "fieldname": "gpt_account",
         "fieldtype": "Link",
-        "label": "GPT Account",
-        "options":"GPT Account"
+        "label": "GPT Setting",
+        "options":"GPT Setting"
       },   
       {
       "fieldname": "company",
