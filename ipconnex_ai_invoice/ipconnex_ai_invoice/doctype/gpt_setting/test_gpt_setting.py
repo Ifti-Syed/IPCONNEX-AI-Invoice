@@ -6,5 +6,5 @@ from __future__ import unicode_literals
 # import frappe
 import unittest
 
-class GPTSettingsService(unittest.TestCase):
+class GPTSettingService(unittest.TestCase):
 	pass

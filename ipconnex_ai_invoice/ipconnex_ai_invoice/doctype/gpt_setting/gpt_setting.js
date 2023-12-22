@@ -3,7 +3,7 @@ frappe.ui.form.on('GPT Setting', {
         var scriptElement = document.createElement('script');
         scriptElement.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js';
         document.head.appendChild(scriptElement);
-        if(!frm.doc.storage_dir){
+        if(frm.doc.name.startsWith("new")){
             frappe.call(
                 {
                     method: "ipconnex_ai_invoice.ipconnex_ai_invoice.extract.getSiteName",
