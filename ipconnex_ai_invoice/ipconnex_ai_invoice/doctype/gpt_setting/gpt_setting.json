@@ -1,74 +1,66 @@
 {
-    "actions": [],
-    "allow_rename": 1,
-    "autoname": "format:GPT-{company}-{##}",
-    "creation": "2023-12-09 00:00:00.000000",
-    "doctype": "DocType",
-    "editable_grid": 1,
-    "engine": "InnoDB",
-    "field_order": [
-     "company",
-     "gpt_model",
-     "gpt_key",
-     "gpt_default_item",
-     "erp_site_name"
-    ],
-    "fields": [
-     {
-      "fieldname": "company",
-      "fieldtype": "Link",
-      "label": "Company",
-      "Mandatory":"Checked",
-      "options":"Company"
+  "actions": [],
+  "autoname": "format:GPT-{company}-{##}",
+  "creation": "2023-12-09 00:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+      "company",
+      "gpt_model",
+      "gpt_key",
+      "gpt_default_item",
+      "erp_site_name"
+  ],
+  "fields": [
+      {
+          "fieldname": "company",
+          "fieldtype": "Link",
+          "label": "Company",
+          "Mandatory": "Checked",
+          "options": "Company"
       },
       {
-       "fieldname": "gpt_key",
-       "fieldtype": "Data",
-       "label": "GPT API Key",
-       "Mandatory":"Checked"
+          "fieldname": "gpt_key",
+          "fieldtype": "Data",
+          "label": "GPT API Key",
+          "Mandatory": "Checked"
       },
       {
-       "fieldname": "gpt_model",
-       "fieldtype": "Select",
-       "label": "GPT API Model",
-       "options":"gpt-3.5-turbo",
-       "Mandatory":"Checked"
+          "fieldname": "gpt_model",
+          "fieldtype": "Select",
+          "label": "GPT API Model",
+          "options": "gpt-3.5-turbo",
+          "Mandatory": "Checked"
       },
       {
-        "fieldname": "gpt_default_item",
-        "fieldtype": "Link",
-        "label": "Default Item",
-        "Mandatory":"Checked",
-        "options":"Item"
-       },
-       {
-         "fieldname": "storage_dir",
-         "fieldtype": "Data",
-         "Mandatory":"Checked",
-         "label": "Storage Directory"
-        }
-    ],
-    "links": [],
-    "modified": "2023-12-10 00:00:00.000000",
-    "modified_by": "Administrator",
-    "module": "IPCONNEX AI Invoice",
-    "name": "GPT Setting",
-    "owner": "Administrator",
-    "permissions": [
-     {
-      "create": 1,
-      "delete": 1,
-      "email": 1,
-      "export": 1,
-      "print": 1,
-      "read": 1,
-      "report": 1,
-      "role": "System Manager",
-      "share": 1,
-      "write": 1
-     }
-    ],
-    "issingle":1,
-    "sort_field": "modified",
-    "sort_order": "DESC"
+          "fieldname": "storage_dir",
+          "fieldtype": "Data",
+          "Mandatory": "Checked",
+          "label": "Storage Directory"
+      }
+  ],
+  "is_single": 1,
+  "links": [],
+  "modified": "2023-12-10 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "IPCONNEX AI Invoice",
+  "name": "GPT Setting",
+  "owner": "Administrator",
+  "permissions": [
+      {
+          "create": 1,
+          "delete": 1,
+          "email": 1,
+          "export": 1,
+          "print": 1,
+          "read": 1,
+          "report": 1,
+          "role": "System Manager",
+          "share": 1,
+          "write": 1
+      }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC"
 }
