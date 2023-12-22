@@ -103,7 +103,7 @@ frappe.ui.form.on('GPT Invoice', {
                                 let items=invoice_data['invoice_items'];
                                 console.log(items);
                                 let amount= 0 ;
-                                frappe.db.get_value("GPT Account",frm.doc.gpt_account,"gpt_default_item").then((response)=>{ 
+                                frappe.db.get_value("GPT Setting",frm.doc.gpt_account,"gpt_default_item").then((response)=>{ 
                                 let invoice_items=[];
                                 for(let i in items){
 
@@ -189,7 +189,7 @@ frappe.ui.form.on('GPT Invoice', {
     },
     gpt_account:function(frm){
         if(frm.doc.gpt_account){
-            frappe.db.get_value("GPT Account",frm.doc.gpt_account,"company").then((response)=>{
+            frappe.db.get_value("GPT Setting",frm.doc.gpt_account,"company").then((response)=>{
                 try{
                     frm.set_value({"company":response.message.company})
                 }catch(e){

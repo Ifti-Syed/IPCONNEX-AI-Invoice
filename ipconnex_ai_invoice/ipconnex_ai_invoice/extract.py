@@ -38,11 +38,11 @@ def ask_chatgpt(question,model,api_key):
 def extractPDFData(doc_name,pdf_path,account_name):
     full_path=pdf_path
     try:
-        model=frappe.db.get_value("GPT Account",account_name,"gpt_model")
-        api_key=frappe.db.get_value("GPT Account",account_name,"gpt_key")
-        full_path=""+frappe.db.get_value("GPT Account",account_name,"storage_dir")+pdf_path
+        model=frappe.db.get_value("GPT Setting",account_name,"gpt_model")
+        api_key=frappe.db.get_value("GPT Setting",account_name,"gpt_key")
+        full_path=""+frappe.db.get_value("GPT Setting",account_name,"storage_dir")+pdf_path
     except :
-        return json.dumps({"status":"0","message":"Failed to get GPT Account data "})
+        return json.dumps({"status":"0","message":"Failed to get GPT Setting data "})
     try :
         companies=[ company["name"] for company in frappe.db.get_all(doc_name,fields=['name']) ]
         pdf_text = extract_text_from_pdf(full_path)    
