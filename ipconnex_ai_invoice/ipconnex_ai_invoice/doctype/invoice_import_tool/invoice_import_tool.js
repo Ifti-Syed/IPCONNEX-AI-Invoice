@@ -96,12 +96,19 @@ frappe.ui.form.on('Invoice Import Tool', {
                             }catch(e){
                                 console.log(e);
                             }
-
+                            
                             try{
                                 frm.set_value({"invoice_date":invoice_data['invoice_date']})
                             }catch(e){
                                 console.log(e);
                             }
+
+                            try{
+                                frm.set_value({"currency":invoice_data['currency']});
+                            }catch(e){
+                                console.log(e);
+                            }
+                            
                             try{
                                 let items=invoice_data['invoice_items'];
                                 console.log(items);
