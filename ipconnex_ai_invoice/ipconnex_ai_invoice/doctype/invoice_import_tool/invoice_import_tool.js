@@ -76,7 +76,6 @@ frappe.ui.form.on('Invoice Import Tool', {
                             },            
                     callback: function(response) {  
                         let res_json=JSON.parse(response.message);
-                        console.log(response.message);
                         let invoice_data={};
                         if(res_json["status"]){
                             try{
@@ -122,7 +121,6 @@ frappe.ui.form.on('Invoice Import Tool', {
                             
                             try{
                                 let items=invoice_data['invoice_items'];
-                                console.log(items);
                                 let amount= 0 ;
                                 let invoice_items=[];
                                 for(let i in items){
