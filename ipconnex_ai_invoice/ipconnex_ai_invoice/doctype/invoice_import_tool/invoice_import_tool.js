@@ -226,7 +226,7 @@ frappe.ui.form.on('Invoice Import Tool Item', {
                     let inv_item=frm.doc.invoice_items[i]
                     amount+=parseInt(inv_item.item_amount*100)*inv_item.item_qty;
                 }
-            frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-parseInt(frm.doc.extracted_amount)*100) /100});
+            frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-parseInt(frm.doc.extracted_amount*100)) /100});
         }, 300);
     },
     item_rate: function(frm, cdt, cdn) { 
@@ -239,17 +239,17 @@ frappe.ui.form.on('Invoice Import Tool Item', {
                     let inv_item=frm.doc.invoice_items[i]
                     amount+=parseInt(inv_item.item_amount*100)*inv_item.item_qty;
                 }
-                frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-parseInt(frm.doc.extracted_amount)*100) /100});
+                frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-parseInt(frm.doc.extracted_amount*100)) /100});
         }, 300);
     },
     invoice_items_remove:function(frm, cdt, cdn){
         setTimeout(function() {
             let amount=0;
-            for(let i in frm.doc.invoice_items ){
-                let inv_item=frm.doc.invoice_items[i];
+            for(let i in cur_frm.doc.invoice_items ){
+                let inv_item=cur_frm.doc.invoice_items[i];
                 amount+=parseInt(inv_item.item_amount*100)*inv_item.item_qty;
             }
-            frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-parseInt(frm.doc.extracted_amount)*100) /100});
+            cur_frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-parseInt(cur_frm.doc.extracted_amount*100)) /100});
         }, 300);
 
     },
