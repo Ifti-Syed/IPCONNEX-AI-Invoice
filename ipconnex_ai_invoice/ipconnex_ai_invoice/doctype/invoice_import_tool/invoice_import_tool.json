@@ -90,17 +90,21 @@
       {
         "fieldname": "invoice_total_amount",
         "fieldtype": "Currency",
-        "label": "Total Amount"
+        "label": "Total Amount",
+        "read_only":1
       },      
       {
         "fieldname": "extracted_amount",
         "fieldtype": "Currency",
-        "label": "Extracted Amount"
+        "label": "Extracted Amount",
+        "read_only":1
       },      
       {
         "fieldname": "difference",
         "fieldtype": "Currency",
-        "label": "Difference"
+        "label": "Difference",
+        "read_only":1
+
       },
       {
         "fieldname": "generate_invoice",
