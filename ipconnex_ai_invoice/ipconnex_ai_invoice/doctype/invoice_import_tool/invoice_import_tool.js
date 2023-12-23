@@ -77,17 +77,17 @@ frappe.ui.form.on('Invoice Import Tool', {
                     callback: function(response) {  
                         let res_json=JSON.parse(response.message);
                         console.log(response.message);
+                        let invoice_data={};
                         if(res_json["status"]){
                             try{
-
-                                let invoice_data=JSON.parse(res_json["message"]);
-
+                                invoice_data=JSON.parse(res_json["message"]);
                             }catch(e){
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Response Error!',
                                     text: 'Failed to parse Chat Gpt Response',
                                 });
+                                return;
                             }
                             try{
                                 if( frm.doc.invoice_type=="Purchase"){
