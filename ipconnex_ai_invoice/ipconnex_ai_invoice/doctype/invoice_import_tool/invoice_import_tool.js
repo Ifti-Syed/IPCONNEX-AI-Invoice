@@ -127,7 +127,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                                 let invoice_items=[];
                                 for(let i in items){
 
-                                    amount+=parseInt(items[i].amount*100);
+                                    amount+=Math.round(items[i].amount*100);
                                     invoice_items.push({
                                         "item_code":  ""  ,
                                         "item_description":items[i].item_description,
@@ -137,7 +137,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                                     });
                                 }
                                 frm.set_value({"invoice_items":invoice_items});
-                                frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount- parseInt(frm.doc.extracted_amount)*100) /100});
+                                frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-Math.round(invoice_data['total_amount'])*100) /100});
                             }catch(e){
                                 console.log(e);
                             }
@@ -163,7 +163,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                         Swal.fire({
                             icon: 'warning',
                             title: 'Empty fields !',
-                            text: 'Please fill item codes first',
+                            text: 'Please fill items codes first',
                         });
                         return;
                     }
@@ -180,7 +180,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                     inv_items.push(inv_item);
                 }
                 $("button[data-fieldname='generate_invoice']").prop("disabled",true); 
-                let due_date_obj= new Date( cur_frm.doc.invoice_date);
+                let due_date_obj= new Date( frm.doc.invoice_date);
                 due_date_obj.setDate( due_date_obj.getDate() + 30);
                 let due_date=due_date_obj.toISOString().split('T')[0];
 
@@ -188,7 +188,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                 if( frm.doc.invoice_type=="Purchase"){
                     frappe.db.insert({
                         'supplier': frm.doc.supplier_name,
-                        'posting_date': cur_frm.doc.invoice_date,
+                        'posting_date': frm.doc.invoice_date,
                         'due_date': due_date,
                         'company': frm.doc.company,
                         'currency': frm.doc.currency,
@@ -202,7 +202,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                 if( frm.doc.invoice_type=="Sales"){
                     frappe.db.insert({
                         'customer': frm.doc.customer_name,
-                        'posting_date': cur_frm.doc.invoice_date,
+                        'posting_date': frm.doc.invoice_date,
                         'due_date': due_date,
                         'company': frm.doc.company,
                         'items': inv_items,
@@ -235,9 +235,9 @@ frappe.ui.form.on('Invoice Import Tool Item', {
             let amount=0;
                 for(let i in frm.doc.invoice_items ){
                     let inv_item=frm.doc.invoice_items[i]
-                    amount+=parseInt(inv_item.item_amount*100)*inv_item.item_qty;
+                    amount+=Math.round(inv_item.item_amount*100)*inv_item.item_qty;
                 }
-            frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-parseInt(frm.doc.extracted_amount*100)) /100});
+            frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-Math.round(frm.doc.extracted_amount*100)) /100});
         }, 300);
     },
     item_rate: function(frm, cdt, cdn) { 
@@ -248,20 +248,19 @@ frappe.ui.form.on('Invoice Import Tool Item', {
             let amount=0;
                 for(let i in frm.doc.invoice_items ){
                     let inv_item=frm.doc.invoice_items[i]
-                    amount+=parseInt(inv_item.item_amount*100)*inv_item.item_qty;
+                    amount+=Math.round(inv_item.item_amount*100)*inv_item.item_qty;
                 }
-                frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-parseInt(frm.doc.extracted_amount*100)) /100});
+                frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-Math.round(frm.doc.extracted_amount*100)) /100});
         }, 300);
     },
     invoice_items_remove:function(frm, cdt, cdn){
         setTimeout(function() {
             let amount=0;
-            for(let i in cur_frm.doc.invoice_items ){
-                let inv_item=cur_frm.doc.invoice_items[i];
-                amount+=parseInt(inv_item.item_amount*100)*inv_item.item_qty;
+            for(let i in frm.doc.invoice_items ){
+                let inv_item=frm.doc.invoice_items[i];
+                amount+=Math.round(inv_item.item_amount*100)*inv_item.item_qty;
             }
-            cur_frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-parseInt(cur_frm.doc.extracted_amount*100)) /100});
+            frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-Math.round(frm.doc.extracted_amount*100)) /100});
         }, 300);
-
     },
 });
