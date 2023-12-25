@@ -135,9 +135,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                                 }
                                 frm.set_value({"invoice_items":invoice_items});
                                 frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-(Math.round(invoice_data['total_amount']*100))) /100});
-                                console.log( Math.abs(amount-(Math.round(invoice_data['total_amount']*100))) /100);
-                                console.log( amount);
-                                console.log( invoice_data['total_amount']);
+
                             }catch(e){
                                 console.log(e);
                             }
