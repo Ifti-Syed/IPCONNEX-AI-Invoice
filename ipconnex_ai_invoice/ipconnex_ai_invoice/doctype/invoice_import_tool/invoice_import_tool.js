@@ -233,7 +233,7 @@ frappe.ui.form.on('Invoice Import Tool Item', {
             let amount=0;
                 for(let i in frm.doc.invoice_items ){
                     let inv_item=frm.doc.invoice_items[i]
-                    amount+=Math.round(inv_item.item_amount*100)*inv_item.item_qty;
+                    amount+=Math.round(inv_item.item_rate*100)*inv_item.item_qty;
                 }
             frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-Math.round(frm.doc.extracted_amount*100)) /100});
         }, 300);
@@ -246,7 +246,7 @@ frappe.ui.form.on('Invoice Import Tool Item', {
             let amount=0;
                 for(let i in frm.doc.invoice_items ){
                     let inv_item=frm.doc.invoice_items[i]
-                    amount+=Math.round(inv_item.item_amount*100)*inv_item.item_qty;
+                    amount+=Math.round(inv_item.item_rate*100)*inv_item.item_qty;
                 }
                 frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-Math.round(frm.doc.extracted_amount*100)) /100});
         }, 300);
@@ -256,7 +256,7 @@ frappe.ui.form.on('Invoice Import Tool Item', {
             let amount=0;
             for(let i in frm.doc.invoice_items ){
                 let inv_item=frm.doc.invoice_items[i];
-                amount+=Math.round(inv_item.item_amount*100)*inv_item.item_qty;
+                amount+=Math.round(inv_item.item_rate*100)*inv_item.item_qty;
             }
             frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-Math.round(frm.doc.extracted_amount*100)) /100});
         }, 300);
