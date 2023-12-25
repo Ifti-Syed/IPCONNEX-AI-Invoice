@@ -69,12 +69,12 @@ frappe.ui.form.on('Invoice Import Tool', {
                     {
                         method: "ipconnex_ai_invoice.ipconnex_ai_invoice.extract.extractPDFData",
                         args:{
-                            "doc_name":frm.doc.invoice_type=="Purchase"?"Supplier":"Customer",
-                            "pdf_path":frm.doc.invoice_file,
-                            "account_name":frm.doc.gpt_account,
-                
+                                "doc_name":frm.doc.invoice_type=="Purchase"?"Supplier":"Customer",
+                                "pdf_path":frm.doc.invoice_file,
+                                "account_name":frm.doc.gpt_account,
                             },            
                     callback: function(response) {  
+                        console.log(response);
                         let res_json=JSON.parse(response.message);
                         let invoice_data={};
                         if(res_json["status"]){
