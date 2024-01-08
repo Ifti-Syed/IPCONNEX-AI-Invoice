@@ -169,8 +169,8 @@ frappe.ui.form.on('Invoice Import Tool', {
                             'item_code': items[i].item_code,
                             'qty': 1.0,
                             'description':items[i].description,
-                            'rate': items[i].rate,
-                            'amount': items[i].rate ,
+                            'rate': items[i].item_rate,
+                            'amount': items[i].item_rate ,
                         }
                     if( frm.doc.invoice_type=="Sales"){
                         inv_item['income_account']=frm.doc.income_account;
