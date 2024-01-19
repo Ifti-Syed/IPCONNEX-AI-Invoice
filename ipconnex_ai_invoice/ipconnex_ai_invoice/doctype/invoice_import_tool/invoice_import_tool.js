@@ -181,13 +181,12 @@ frappe.ui.form.on('Invoice Import Tool', {
                 let due_date_obj= new Date( frm.doc.invoice_date);
                 due_date_obj.setDate( due_date_obj.getDate() + 30);
                 let due_date=due_date_obj.toISOString().split('T')[0];
-
                 if( frm.doc.invoice_type=="Purchase"){
                     frappe.call({
                         method:"erpnext.accounts.party.get_party_details",
                         args:{
                                 "posting_date": frm.doc.invoice_date,
-                                "party":frm.doc.company,
+                                "party":frm.doc.supplier,
                                 "party_type": "Supplier",
                                 "account": "",
                                 "price_list": "",
@@ -260,7 +259,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                         method:"erpnext.accounts.party.get_party_details",
                         args:{
                                 "posting_date": frm.doc.invoice_date,
-                                "party":frm.doc.company,
+                                "party":frm.doc.customer,
                                 "party_type": "Customer",
                                 "account": "",
                                 "price_list": "",
