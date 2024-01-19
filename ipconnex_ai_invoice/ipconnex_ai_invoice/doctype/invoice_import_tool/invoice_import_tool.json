@@ -11,6 +11,7 @@
      "company",
      "invoice_file",
      "invoice_type",
+     "invoice_default_item",
      "extract_data",
      "customer_name",
      "supplier_name",
@@ -35,7 +36,13 @@
         "fieldname": "invoice_file",
         "fieldtype": "Attach",
         "label": "Join an Invoice File"
-      },   
+      },         
+      {
+        "fieldname": "invoice_default_item",
+        "fieldtype": "Link",
+        "label": "Default Item",
+        "options":"Item"
+      }, 
       {
         "fieldname": "extract_data",
         "fieldtype": "Button",

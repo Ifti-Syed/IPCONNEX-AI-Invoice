@@ -117,25 +117,25 @@ frappe.ui.form.on('Invoice Import Tool', {
                             }catch(e){
                                 console.log(e);
                             }
-                            
+                            let used_item=frm.doc.invoice_default_item??"";
                             try{
                                 let items=invoice_data['invoice_items'];
                                 let amount= 0 ;
                                 let invoice_items=[];
                                 for(let i in items){
-
-                                    amount+=Math.round(items[i].amount*100);
-                                    invoice_items.push({
-                                        "item_code":  ""  ,
-                                        "item_description":items[i].item_description,
-                                        "item_qty": 1    ,
-                                        "item_rate": items[i].amount  , 
-                                        "item_amount":items[i].amount
-                                    });
+                                    if(items[i].amount!==0){
+                                        amount+=Math.round(items[i].amount*100);
+                                        invoice_items.push({
+                                            "item_code": used_item,
+                                            "item_description":items[i].item_description,
+                                            "item_qty": 1,
+                                            "item_rate": items[i].amount  , 
+                                            "item_amount":items[i].amount
+                                        });
+                                    }
                                 }
                                 frm.set_value({"invoice_items":invoice_items});
                                 frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-(Math.round(invoice_data['total_amount']*100))) /100});
-
                             }catch(e){
                                 console.log(e);
                             }
@@ -182,33 +182,149 @@ frappe.ui.form.on('Invoice Import Tool', {
                 due_date_obj.setDate( due_date_obj.getDate() + 30);
                 let due_date=due_date_obj.toISOString().split('T')[0];
 
-    
                 if( frm.doc.invoice_type=="Purchase"){
-                    frappe.db.insert({
-                        'supplier': frm.doc.supplier_name,
-                        'posting_date': frm.doc.invoice_date,
-                        'due_date': due_date,
-                        'company': frm.doc.company,
-                        'currency': frm.doc.currency,
-                        'items': inv_items,
-                        "doctype":"Purchase Invoice"
-                    }).then((response)=>{
-                        frm.set_value({"generated_purchase":response.name});
-                        frm.save();
+                    frappe.call({
+                        method:"erpnext.accounts.party.get_party_details",
+                        args:{
+                                "posting_date": frm.doc.invoice_date,
+                                "party":frm.doc.company,
+                                "party_type": "Supplier",
+                                "account": "",
+                                "price_list": "",
+                                "company_address": "",
+                                "currency": "",
+                                "company": frm.doc.company,
+                                "doctype": "Purchase Invoice"
+                        },
+                        callback: function(response) {
+                                if(response.message.taxes_and_charges){  /// get taxes 
+                                    frappe.call({
+                                        method:"erpnext.controllers.accounts_controller.get_taxes_and_charges",
+                                        args:{
+                                            "master_doctype": "Purchase Taxes and Charges Template",
+                                            "master_name": response.message.taxes_and_charges
+                                        },
+                                        callback: function(taxes_response) {
+                                            frappe.db.insert({
+                                                'supplier': frm.doc.supplier_name,
+                                                'posting_date': frm.doc.invoice_date,
+                                                'due_date': due_date,
+                                                'company': frm.doc.company,
+                                                'currency': frm.doc.currency,
+                                                'items': inv_items,
+                                                'taxes': taxes_response.message,
+                                                "doctype":"Purchase Invoice"
+                                            }).then((response)=>{
+                                                frm.set_value({"generated_purchase":response.name});
+                                                if(frm.doc.invoice_file){
+                                                    frappe.db.insert({
+                                                    "is_private": 1,
+                                                    "file_url": frm.doc.invoice_file,
+                                                    "attached_to_doctype": "Purchase Invoice",
+                                                    "attached_to_name": response.name,
+                                                    "doctype": "File"
+                                                })}
+                                                frm.save();
+                                            });
+                                        }
+                                    });
+                                }else{ // add witout taxes
+                                    frappe.db.insert({
+                                        'supplier': frm.doc.supplier_name,
+                                        'posting_date': frm.doc.invoice_date,
+                                        'due_date': due_date,
+                                        'company': frm.doc.company,
+                                        'currency': frm.doc.currency,
+                                        'items': inv_items,
+                                        "doctype":"Purchase Invoice"
+                                    }).then((response)=>{
+                                        frm.set_value({"generated_purchase":response.name});
+                                        if(frm.doc.invoice_file){
+                                            frappe.db.insert({
+                                            "is_private": 1,
+                                            "file_url": frm.doc.invoice_file,
+                                            "attached_to_doctype": "Purchase Invoice",
+                                            "attached_to_name": response.name,
+                                            "doctype": "File"
+                                        })}
+                                        frm.save();
+                                    });
+                                }
+
+                            }
                     });
+                    
                 }            
                 if( frm.doc.invoice_type=="Sales"){
-                    frappe.db.insert({
-                        'customer': frm.doc.customer_name,
-                        'posting_date': frm.doc.invoice_date,
-                        'due_date': due_date,
-                        'company': frm.doc.company,
-                        'items': inv_items,
-                        "doctype":"Sales Invoice"
-                    }).then((response)=>{
-                        frm.set_value({"generated_sales":response.name});
-                        frm.save();
+                    frappe.call({
+                        method:"erpnext.accounts.party.get_party_details",
+                        args:{
+                                "posting_date": frm.doc.invoice_date,
+                                "party":frm.doc.company,
+                                "party_type": "Customer",
+                                "account": "",
+                                "price_list": "",
+                                "company_address": "",
+                                "currency": "",
+                                "company": frm.doc.company,
+                                "doctype": "Sales Invoice"
+                        },
+                        callback: function(response) {
+                            console.log(response);
+                            if(response.message.taxes_and_charges){ // get taxes
+                                frappe.call({
+                                    method:"erpnext.controllers.accounts_controller.get_taxes_and_charges",
+                                    args:{
+                                        "master_doctype": "Sales Taxes and Charges Template",
+                                        "master_name": response.message.taxes_and_charges
+                                    },
+                                    callback: function(taxes_response) {
+                                        frappe.db.insert({
+                                            'supplier': frm.doc.supplier_name,
+                                            'posting_date': frm.doc.invoice_date,
+                                            'due_date': due_date,
+                                            'company': frm.doc.company,
+                                            'currency': frm.doc.currency,
+                                            'items': inv_items,
+                                            'taxes': taxes_response.message,
+                                            "doctype":"Purchase Invoice"
+                                        }).then((response)=>{
+                                            frm.set_value({"generated_purchase":response.name});
+                                            if(frm.doc.invoice_file){
+                                                frappe.db.insert({
+                                                "is_private": 1,
+                                                "file_url": frm.doc.invoice_file,
+                                                "attached_to_doctype": "Purchase Invoice",
+                                                "attached_to_name": response.name,
+                                                "doctype": "File"
+                                            })}
+                                            frm.save();
+                                        });
+                                    }
+                                });
+                            }else{ // add without taxes
+                                frappe.db.insert({
+                                    'customer': frm.doc.customer_name,
+                                    'posting_date': frm.doc.invoice_date,
+                                    'due_date': due_date,
+                                    'company': frm.doc.company,
+                                    'items': inv_items,
+                                    "doctype":"Sales Invoice"
+                                }).then((response)=>{
+                                    frm.set_value({"generated_sales":response.name});
+                                    if(frm.doc.invoice_file){frappe.db.insert({
+                                        "is_private": 1,
+                                        "file_url": frm.doc.invoice_file,
+                                        "attached_to_doctype": "Sales Invoice",
+                                        "attached_to_name": response.name,
+                                        "doctype": "File"
+                                    })}
+                                    frm.save();
+                                });
+                            }
+                        }
                     });
+
                 }
                 $("button[data-fieldname='generate_invoice']").prop("disabled",false);
             });
