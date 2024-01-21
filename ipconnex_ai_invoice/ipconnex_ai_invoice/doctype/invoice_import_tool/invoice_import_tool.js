@@ -124,7 +124,6 @@ frappe.ui.form.on('Invoice Import Tool', {
                                 let invoice_items=[];
                                 for(let i in items){
                                     if(items[i].amount!==0){
-                                        amount+=Math.round(items[i].amount*100);
                                         let row_amount=items[i].amount;
                                         let rate_float=parseFloat(items[i].rate);
                                         let duration_float=parseFloat(items[i].duration);
@@ -142,12 +141,8 @@ frappe.ui.form.on('Invoice Import Tool', {
                                             "item_rate": row_amount , 
                                             "item_amount":row_amount
                                         });
-                                        console.log(row_amount)
-
-
                                     }
                                 }
-
                                 frm.set_value({"invoice_items":invoice_items});
                                 frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-(Math.round(invoice_data['total_amount']*100))) /100});
                             }catch(e){
