@@ -142,8 +142,12 @@ frappe.ui.form.on('Invoice Import Tool', {
                                             "item_rate": row_ammount , 
                                             "item_amount":row_ammount
                                         });
+                                        console.log(row_ammount)
+
+
                                     }
                                 }
+
                                 frm.set_value({"invoice_items":invoice_items});
                                 frm.set_value({"invoice_total_amount":amount/100,"difference": Math.abs(amount-(Math.round(invoice_data['total_amount']*100))) /100});
                             }catch(e){
