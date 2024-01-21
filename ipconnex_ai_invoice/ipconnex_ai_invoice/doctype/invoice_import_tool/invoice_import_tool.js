@@ -125,12 +125,22 @@ frappe.ui.form.on('Invoice Import Tool', {
                                 for(let i in items){
                                     if(items[i].amount!==0){
                                         amount+=Math.round(items[i].amount*100);
+                                        let row_ammount=items[i].amount;
+                                        let rate_float=parseFloat(items[i].rate);
+                                        let qty_float=parseFloat(items[i].qty);
+                                        let amount_float=parseFloat(items[i].amount);
+                                        if( !isNaN(rate_float) && !isNaN(amount_float) && !isNaN(qty_float) ){
+                                            if(Math.abs(rate_float*amount_float/qty_float-1)<Math.abs(rate_float*qty_float/amount_float-1) ){
+                                                row_ammount=items[i].qty;
+                                            }
+                                        }
+                                        amount+=Math.round(row_ammount*100);
                                         invoice_items.push({
                                             "item_code": used_item,
                                             "item_description":items[i].item_description,
                                             "item_qty": 1,
-                                            "item_rate": items[i].amount  , 
-                                            "item_amount":items[i].amount
+                                            "item_rate": row_ammount , 
+                                            "item_amount":row_ammount
                                         });
                                     }
                                 }
