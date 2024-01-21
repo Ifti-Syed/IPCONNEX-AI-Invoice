@@ -127,11 +127,11 @@ frappe.ui.form.on('Invoice Import Tool', {
                                         amount+=Math.round(items[i].amount*100);
                                         let row_ammount=items[i].amount;
                                         let rate_float=parseFloat(items[i].rate);
-                                        let qty_float=parseFloat(items[i].qty);
+                                        let duration_float=parseFloat(items[i].duration);
                                         let amount_float=parseFloat(items[i].amount);
-                                        if( !isNaN(rate_float) && !isNaN(amount_float) && !isNaN(qty_float) ){
-                                            if(Math.abs(rate_float*amount_float/qty_float-1)<Math.abs(rate_float*qty_float/amount_float-1) ){
-                                                row_ammount=items[i].qty;
+                                        if( !isNaN(rate_float) && !isNaN(amount_float) && !isNaN(duration_float) ){
+                                            if(Math.abs(rate_float*amount_float/duration_float-1)<Math.abs(rate_float*duration_float/amount_float-1) ){
+                                                row_ammount=items[i].duration;
                                             }
                                         }
                                         amount+=Math.round(row_ammount*100);
