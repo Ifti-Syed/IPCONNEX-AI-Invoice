@@ -123,13 +123,13 @@ frappe.ui.form.on('Invoice Import Tool', {
                                 let amount= 0 ;
                                 let invoice_items=[];
                                 for(let i in items){
-                                    if(items[i].amount!==0){
+                                    if(items[i].amount!=0){
                                         let row_amount=items[i].amount;
                                         let rate_float=parseFloat(items[i].rate);
                                         let duration_float=parseFloat(items[i].duration);
                                         let amount_float=parseFloat(items[i].amount);
                                         if( !isNaN(rate_float) && !isNaN(amount_float) && !isNaN(duration_float) ){
-                                            if(Math.abs(rate_float*amount_float/duration_float-1)<Math.abs(rate_float*duration_float/amount_float-1) ){
+                                            if(Math.abs(rate_float*amount_float/duration_float-1)<Math.abs(rate_float*duration_float/amount_float-1) && Math.abs(rate_float*amount_float/duration_float-1)<0.1   ){
                                                 row_amount=items[i].duration;
                                             }
                                         }   
