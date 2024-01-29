@@ -195,7 +195,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                         method:"erpnext.accounts.party.get_party_details",
                         args:{
                                 "posting_date": frm.doc.invoice_date,
-                                "party":frm.doc.supplier,
+                                "party":frm.doc.supplier_name,
                                 "party_type": "Supplier",
                                 "account": "",
                                 "price_list": "",
@@ -268,7 +268,7 @@ frappe.ui.form.on('Invoice Import Tool', {
                         method:"erpnext.accounts.party.get_party_details",
                         args:{
                                 "posting_date": frm.doc.invoice_date,
-                                "party":frm.doc.customer,
+                                "party":frm.doc.customer_name,
                                 "party_type": "Customer",
                                 "account": "",
                                 "price_list": "",
@@ -288,21 +288,21 @@ frappe.ui.form.on('Invoice Import Tool', {
                                     },
                                     callback: function(taxes_response) {
                                         frappe.db.insert({
-                                            'supplier': frm.doc.supplier_name,
+                                            'customer': frm.doc.customer_name,
                                             'posting_date': frm.doc.invoice_date,
                                             'due_date': due_date,
                                             'company': frm.doc.company,
                                             'currency': frm.doc.currency,
                                             'items': inv_items,
                                             'taxes': taxes_response.message,
-                                            "doctype":"Purchase Invoice"
+                                            "doctype":"Sales Invoice"
                                         }).then((response)=>{
                                             frm.set_value({"generated_purchase":response.name});
                                             if(frm.doc.invoice_file){
                                                 frappe.db.insert({
                                                 "is_private": 1,
                                                 "file_url": frm.doc.invoice_file,
-                                                "attached_to_doctype": "Purchase Invoice",
+                                                "attached_to_doctype":"Sales Invoice",
                                                 "attached_to_name": response.name,
                                                 "doctype": "File"
                                             })}
