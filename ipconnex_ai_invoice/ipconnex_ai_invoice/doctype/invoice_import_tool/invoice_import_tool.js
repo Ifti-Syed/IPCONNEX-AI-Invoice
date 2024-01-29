@@ -3,8 +3,8 @@ scriptElement.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert
 document.head.appendChild(scriptElement);
 frappe.ui.form.on('Invoice Import Tool', {
     refresh: function(frm) {        
-        $("input[data-fieldname='generated_sales']").prop("disabled",true);
-        $("input[data-fieldname='generated_purchase']").prop("disabled",true);
+        $("input[data-fieldname='generated_sales']").prop("readonly",true);
+        $("input[data-fieldname='generated_purchase']").prop("readonly",true);
         $("button[data-fieldname='extract_data']").off('click').on('click',(e)=>{
             if($("button[data-fieldname='extract_data']").prop("disabled")){
                 return;
