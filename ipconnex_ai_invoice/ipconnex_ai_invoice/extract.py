@@ -10,6 +10,7 @@ import random
 import time
 from PyPDF2 import PdfReader 
 from openai import OpenAI
+import openai
 
 def extract_text_from_pdf(pdf_path):
     with open(pdf_path, 'rb') as file:
@@ -66,3 +67,18 @@ def getSiteName():
         return json.dumps({"status":"0","message":'We got an error while trying to get the default storage path'})
 
 
+@frappe.whitelist()
+def ask_openai(model,messages,response_format,api_key):
+    openai.api_key = api_key
+
+    response = openai.ChatCompletion.create(
+            model=model,
+            messages=messages,
+            response_format={
+                "type":response_format  # Hypothetical usage; not currently supported
+            }
+        )
+    result={"response":response}
+    if response:
+        result["content"] = response['choices'][0]['message']['content']
+    return result
