@@ -69,16 +69,16 @@ def getSiteName():
 
 @frappe.whitelist()
 def ask_openai(model,messages,response_format,api_key):
-
     client = OpenAI(api_key=api_key)
     response  = client.chat.completions.create(   
             model=model,
             messages=messages,
             response_format={
-                "type":response_format  # Hypothetical usage; not currently supported
+                "type":response_format  
             }
         )
     result={"response":response}
     if response:
         result["content"] = response.choices[0].message.content
     return result
+                   
