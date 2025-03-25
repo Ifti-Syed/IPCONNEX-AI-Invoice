@@ -223,12 +223,14 @@ frappe.ui.form.on("Invoice Import Tool", {
         due_date_obj.setDate(due_date_obj.getDate() + 30);
         let due_date = due_date_obj.toISOString().split("T")[0];
         let company_name = frm.doc.company;
+        console.log(company_name);
         if (frm.doc.invoice_type == "Purchase") {
           frappe.db
             .get_doc("Supplier", frm.doc.supplier_name)
             .then((supplier_doc) => {
               if (supplier_doc.accounts.length > 0) {
                 company_name = supplier_doc.accounts[0].company;
+                console.log(company_name);
               }
               frappe.call({
                 method: "erpnext.accounts.party.get_party_details",
