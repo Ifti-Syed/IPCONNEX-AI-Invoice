@@ -318,6 +318,7 @@ frappe.ui.form.on("Invoice Import Tool", {
             .then((customer_doc) => {
               if (customer_doc.accounts.length > 0) {
                 company_name = customer_doc.accounts[0].company;
+                console.log(company_name);
               }
               frappe.call({
                 method: "erpnext.accounts.party.get_party_details",
