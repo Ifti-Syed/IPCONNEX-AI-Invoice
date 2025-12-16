@@ -5,7 +5,6 @@ import json
 from six import string_types
 from frappe import _
 from frappe.utils import flt
-import stripe
 import random
 import time
 from PyPDF2 import PdfReader 
