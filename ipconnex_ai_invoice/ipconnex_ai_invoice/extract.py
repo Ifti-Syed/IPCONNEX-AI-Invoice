@@ -1,83 +1,224 @@
-
 from __future__ import unicode_literals
+
 import frappe
 import json
-from six import string_types
+import base64
+import os
+import re
+
 from frappe import _
-from frappe.utils import flt
-import random
-import time
-from PyPDF2 import PdfReader 
 from openai import OpenAI
-import openai
+from frappe.utils.file_manager import get_file_path
 
-def extract_text_from_pdf(pdf_path):
-    with open(pdf_path, 'rb') as file:
-        pdf_reader = PdfReader(file)
-        text = ''
-        for page_num in range(len(pdf_reader.pages)):
-            page = pdf_reader.pages[page_num]
-            text += page.extract_text()
-    return text
+
+# ===================================================
+# Helpers
+# ===================================================
+
+def get_openai_client(account_name):
+    api_key = frappe.db.get_value("GPT Setting", account_name, "gpt_key")
+    model = frappe.db.get_value("GPT Setting", account_name, "gpt_model")
+
+    if not api_key or not model:
+        frappe.throw(_("OpenAI API key or model not configured"))
+
+    return OpenAI(api_key=api_key), model
+
+
+def get_allowed_companies(doctype):
+    return frappe.get_all(doctype, pluck="name")
+
+
+def parse_and_clean_json(text):
+    """
+    Ensures we always return valid JSON or None
+    """
+    if not text:
+        return None
+
+    text = text.strip()
+
+    # Remove markdown blocks if any
+    text = re.sub(r"^```(json)?", "", text)
+    text = re.sub(r"```$", "", text)
+
+    text = text.strip()
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group())
+            except Exception:
+                return None
+    return None
+
+
+# ===================================================
+# MAIN METHOD (Frappe API)
+# ===================================================
 
 @frappe.whitelist()
-def ask_chatgpt(question,model,api_key):
-    client = OpenAI(api_key=api_key)
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": question,
+def extract_invoice_with_vision(pdf_path, company_doctype, account_name):
+    """
+    Extract invoice data using OpenAI Vision (PDF or Image)
+    """
+
+    try:
+        # -----------------------------------------------
+        # OpenAI client
+        # -----------------------------------------------
+        client, model = get_openai_client(account_name)
+
+        # -----------------------------------------------
+        # Resolve file path safely
+        # -----------------------------------------------
+        full_path = get_file_path(pdf_path)
+        if not full_path or not os.path.exists(full_path):
+            frappe.throw(_("Invoice file not found"))
+
+        # -----------------------------------------------
+        # Allowed companies
+        # -----------------------------------------------
+        companies = get_allowed_companies(company_doctype)
+        company_list = ", ".join([f'"{c}"' for c in companies])
+
+        # -----------------------------------------------
+        # Prompt
+        # -----------------------------------------------
+        prompt = f"""
+       CRITICAL INSTRUCTIONS:
+       1. YOU MUST OUTPUT A VALID JSON OBJECT AND NOTHING ELSE - NO MARKDOWN, NO CODE BLOCKS
+       2. DO NOT WRAP THE JSON IN ```json OR ANY OTHER FORMATTING
+       3. DO NOT INCLUDE ANY EXPLANATIONS, COMMENTS, OR EXTRA TEXT
+       4. ENSURE THE JSON IS PROPERLY FORMATTED AND CAN BE PARSED BY json.loads()
+       5. IF YOU CANNOT FIND A VALUE, USE THE DEFAULT VALUES SPECIFIED BELOW
+
+       You are an expert AI Invoice Extractor. Extract structured data from the provided invoice file and return it as a valid JSON object.
+
+       ### STRICT EXTRACTION RULES:
+       1. **OUTPUT FORMAT**: Return ONLY a single valid JSON object. No additional text.
+       2. **Company Name (company)**: MUST be exactly one of: {company_list}. If no match found, use "Central Ventilation Systems Co. W.L.L. - Doha".
+       3. **Supplier Name (supplier)**: Extract the exact supplier name as it appears on the invoice.
+       4. **Missing Values**: 
+          - Strings: Use empty string "" 
+          - Integers: Use 0 
+          - Floats: Use 0.0
+       5. **Date Format**: Always use "YYYY-MM-DD" format for bill_date.
+       6. **Currency**: Extract currency information when available (AED, QAR, SAR, EUR, etc.)
+       7. **Arrays**: 
+          - If no items found, use empty array: "items": []
+          - For items: Extract quantity, unit price, amount, and unit of measure (UOM)
+          - **Unit of Measure (UOM)**: Look for abbreviations like "Ea", "Pcs", "Box", "Set", "Kg", "Ltr", "Meter". If no UOM is found, use an empty string "".
+          - If no taxes found, use empty array: "taxes": []
+
+       ### REQUIRED JSON STRUCTURE - YOU MUST FOLLOW THIS EXACT FORMAT (MATCHES AZURE OUTPUT):
+       {{
+           "supplier": "",
+           "company": "",
+           "bill_no": "",
+           "bill_date": "YYYY-MM-DD",
+           "is_paid": 1,
+           "mode_of_payment": "",
+           "paid_amount": 0.0,
+           "items": [
+               {{
+                   "item_code": "",
+                   "item_name": "",
+                   "qty": 0.0,
+                   "rate": 0.0,
+                   "amount": 0.0,
+                   "uom": "",
+                   "expense_account": ""
+               }}
+           ],
+           "taxes": [
+               {{
+                   "description": "",
+                   "tax_amount": 0.0,
+                   "tax_currency": ""
+               }}
+           ]
+       }}
+
+       ### EXTRACTION GUIDELINES:
+       - Map "Vendor", "Supplier", "From" fields to "supplier",usually supplier name is company name which will be top if the invoice heading
+       - Map "Customer", "Client", "Bill To" fields to "company" 
+       - Map "Invoice Number", "Invoice ID", "Bill No" to "bill_no"
+       - Map "Invoice Date", "Date", "Bill Date" to "bill_date"
+       - Map "Payment Method", "Payment Type" to "mode_of_payment"
+       - For currency: Extract from amounts like "USD", "AED", "EUR" or currency symbols
+       - For items: Extract quantity, unit price, amount, and unit of measure
+       - For taxes: Extract tax descriptions (VAT, Sales Tax, etc.) and amounts
+       """
+
+        # -----------------------------------------------
+        # File handling (IMAGE vs PDF)
+        # -----------------------------------------------
+        ext = os.path.splitext(full_path)[1].lower()
+
+        if ext in [".jpg", ".jpeg", ".png"]:
+            with open(full_path, "rb") as f:
+                image_b64 = base64.b64encode(f.read()).decode()
+
+            file_content = {
+                "type": "input_image",
+                "image_url": f"data:image/jpeg;base64,{image_b64}"
             }
-        ],
-        model=model
-    )
-    return chat_completion
 
+        else:
+            with open(full_path, "rb") as f:
+                uploaded = client.files.create(
+                    file=f,
+                    purpose="user_data"
+                )
 
-@frappe.whitelist()
-def extractPDFData(doc_name,pdf_path,account_name):
-    full_path=pdf_path
-    try:
-        model=frappe.db.get_value("GPT Setting",account_name,"gpt_model")
-        api_key=frappe.db.get_value("GPT Setting",account_name,"gpt_key")
-        full_path=""+frappe.db.get_value("GPT Setting",account_name,"storage_dir")+pdf_path
-    except :
-        return json.dumps({"status":"0","message":"Failed to get GPT Setting data "})
-    try :
-        companies=[ company["name"] for company in frappe.db.get_all(doc_name,fields=['name']) ]
-        pdf_text = extract_text_from_pdf(full_path)    
-    except :
-        return json.dumps({"status":"0","message":"Failed to read PDF"})
-    try:
-        question = "Please give me all details of this invoice in an JSON format. dont put any character outside the json . the answer should be parsable into json . I want the JSON to contain this info with this keys: {'company': company , 'invoice_date': 'yyyy-mm-dd','total_amount': total_charges_float,'currency': currency_in_3_letters_uppercase , 'invoice_items': [{'item_description': item_description ,'rate': rate ,'duration':duration_as_string ,'amount': 'charges is the last data in the batch'}]} . items must be an array of objects without including the total . take attention for amounts written with spaces each 3 numbers like  \"9   999 999.99\" or \"9    999.99\". make sure each amount extracted (or charges or price or any synonym ) is indexed by a label which is a synonym to amount charges price is the last item of the item data list  . and its always the last column of the data vatcg its not a duration nor a rate. make sure to not specify the currency in ammounts. make sure the result could be parsed as json  . Here's a list of all customers, choose the object that fits best: " + ', '.join(companies) +  " to put in the json data after without editing anything. and here's a text extracted from an invoice pdf document: " + pdf_text
-        answer = ask_chatgpt(question,model,api_key).choices[0].message.content
-    except :
-        return json.dumps({"status":"0","message":"There is an error while using ChatGPT API "})
-    return json.dumps({"status":"1","message":""+answer})
+            file_content = {
+                "type": "input_file",
+                "file_id": uploaded.id
+            }
 
-
-@frappe.whitelist()
-def getSiteName():
-    try: 
-        return json.dumps({"status":"1",
-                           "message":"/home/frappe/frappe-bench/sites/"+(frappe.local.site)})
-    except Exception as e:
-        return json.dumps({"status":"0","message":'We got an error while trying to get the default storage path'})
-
-
-@frappe.whitelist()
-def ask_openai(model,messages,response_format,api_key):
-    client = OpenAI(api_key=api_key)
-    response  = client.chat.completions.create(   
+        # -----------------------------------------------
+        # OpenAI API call
+        # -----------------------------------------------
+        response = client.responses.create(
             model=model,
-            messages=messages,
-            response_format={
-                "type":response_format  
-            }
+            input=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": prompt},
+                        file_content
+                    ]
+                }
+            ],
+            temperature=0
         )
-    result={"response":response}
-    if response:
-        result["content"] = response.choices[0].message.content
-    return result
-                   
+
+        output_text = response.output_text
+        parsed = parse_and_clean_json(output_text)
+
+        if not parsed:
+            frappe.throw(_("AI did not return valid JSON"))
+
+        if not isinstance(parsed.get("items"), list):
+            frappe.throw(_("Invalid items structure in extracted data"))
+
+        return {
+            "status": 1,
+            "data": parsed
+        }
+
+    except Exception as e:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Invoice Vision OCR Error"
+        )
+        return {
+            "status": 0,
+            "error": str(e)
+        }
+
+

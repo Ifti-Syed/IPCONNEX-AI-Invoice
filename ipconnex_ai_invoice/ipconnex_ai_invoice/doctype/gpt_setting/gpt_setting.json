@@ -6,7 +6,12 @@
   "doctype": "DocType",
   "editable_grid": 1,
   "engine": "InnoDB",
-  "field_order": ["company", "gpt_model", "gpt_key", "erp_site_name"],
+  "field_order": [
+    "company",
+    "gpt_model",
+    "gpt_key",
+    "erp_site_name"
+  ],
   "fields": [
     {
       "fieldname": "company",
@@ -26,7 +31,7 @@
       "fieldname": "gpt_model",
       "fieldtype": "Select",
       "label": "GPT API Model",
-      "options": "gpt-3.5-turbo",
+      "options": "gpt-4o-mini",
       "Mandatory": "Checked"
     },
     {
