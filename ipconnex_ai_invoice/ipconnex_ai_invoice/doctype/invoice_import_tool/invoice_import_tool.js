@@ -1,4 +1,6 @@
 console.log("🔥 NEW Invoice Import Tool JS LOADED 🔥1");
+
+
 var scriptElement = document.createElement("script");
 scriptElement.src =
   "https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js";
@@ -102,6 +104,8 @@ frappe.ui.form.on("Invoice Import Tool", {
             items.forEach((row) => {
               if (!row.amount || row.amount <= 0) return;
 
+
+
               invoice_items.push({
                 item_code:
                   row.item_code ||
@@ -116,7 +120,7 @@ frappe.ui.form.on("Invoice Import Tool", {
                 item_qty: row.qty || 1,
                 item_rate: row.rate || row.amount,
                 item_amount: row.amount,
-                uom: row.uom || "Ea",
+                units_of_measure: row.uom || "Ea",
                 expense_account:
                   row.expense_account || "Accounts Receivable - CVS"
               });
