@@ -1,4 +1,4 @@
-console.log("🔥 NEW Invoice Import Tool JS LOADED 🔥");
+console.log("🔥 NEW Invoice Import Tool JS LOADED 🔥1");
 var scriptElement = document.createElement("script");
 scriptElement.src =
   "https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js";
@@ -84,6 +84,13 @@ frappe.ui.form.on("Invoice Import Tool", {
             frm.set_value("invoice_date", data.bill_date || "");
             frm.set_value("currency", data.currency || frm.doc.currency);
             frm.set_value("extracted_amount", data.total_amount || 0);
+            frm.set_value(
+              "mode_of_payment",
+              data.mode_of_payment || "Cash"
+
+            );
+
+
 
             // -------------------------------
             // Items Table
@@ -96,21 +103,29 @@ frappe.ui.form.on("Invoice Import Tool", {
               if (!row.amount || row.amount <= 0) return;
 
               invoice_items.push({
-                item_code: frm.doc.invoice_default_item || "",
-                item_description: row.item_description || row.item_name || "",
+                item_code:
+                  row.item_code ||
+                  frm.doc.invoice_default_item ||
+                  "99-Purchases",
+
+                item_description:
+                  row.item_description ||
+                  row.item_name ||
+                  "Auto-imported item",
+
                 item_qty: row.qty || 1,
                 item_rate: row.rate || row.amount,
                 item_amount: row.amount,
-                // 👇 ADD THESE
-                uom: row.uom || "",
-                expense_account: row.expense_account || ""
-
+                uom: row.uom || "Ea",
+                expense_account:
+                  row.expense_account || "Accounts Receivable - CVS"
               });
 
               total += Math.round(row.amount * 100);
             });
 
             frm.set_value("invoice_items", invoice_items);
+            frm.refresh_field("invoice_items");
 
             frm.set_value({
               invoice_total_amount: total / 100,
@@ -119,6 +134,7 @@ frappe.ui.form.on("Invoice Import Tool", {
                   total - Math.round((data.total_amount || 0) * 100)
                 ) / 100,
             });
+
 
             Swal.fire({
               icon: "success",
@@ -150,12 +166,13 @@ frappe.ui.form.on("Invoice Import Tool", {
             return;
           }
           let inv_item = {
-            item_code: items[i].item_code,
-            qty: 1.0,
-            description: items[i].description,
+            item_code: items[i].item_code || "99-Purchases",
+            qty: items[i].item_qty || 1,
+            description: items[i].item_description || "Auto-imported item",
             rate: items[i].item_rate,
             amount: items[i].item_rate,
           };
+
           if (frm.doc.invoice_type == "Sales") {
             inv_item["income_account"] = frm.doc.income_account;
           }
@@ -392,6 +409,7 @@ function recalc_items(frm) {
     });
 
     frm.refresh_field("invoice_items");
+
 
     frm.set_value({
       invoice_total_amount: total / 100,
