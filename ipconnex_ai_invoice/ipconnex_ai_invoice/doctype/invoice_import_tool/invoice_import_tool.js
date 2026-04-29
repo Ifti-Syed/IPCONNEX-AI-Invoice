@@ -5,7 +5,7 @@ scriptElement.src =
   "https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js";
 document.head.appendChild(scriptElement);
 
-frappe.ui.form.on("Csv Invoice Tool", {
+frappe.ui.form.on("Cvs Invoice Tool", {
   refresh(frm) {
     $("input[data-fieldname='generated_sales']").prop("readonly", true);
     $("input[data-fieldname='generated_purchase']").prop("readonly", true);

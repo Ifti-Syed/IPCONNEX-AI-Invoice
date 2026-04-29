@@ -1,4 +1,4 @@
-frappe.ui.form.on('Csv Invoice Tool', {
+frappe.ui.form.on('Cvs Invoice Tool', {
     refresh: function(frm) {
     }      
 });
