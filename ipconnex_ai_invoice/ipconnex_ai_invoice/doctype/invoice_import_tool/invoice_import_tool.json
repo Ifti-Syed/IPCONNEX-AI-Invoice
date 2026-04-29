@@ -177,7 +177,7 @@
     "modified": "2026-01-14 16:00:24.378182",
     "modified_by": "Administrator",
     "module": "IPCONNEX AI Invoice",
-    "name": "Invoice Import Tool",
+    "name": "Csv Invoice Tool",
     "naming_rule": "Expression",
     "owner": "Administrator",
     "permissions": [

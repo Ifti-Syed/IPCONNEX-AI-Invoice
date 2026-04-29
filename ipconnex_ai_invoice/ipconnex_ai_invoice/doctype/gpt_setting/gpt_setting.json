@@ -10,7 +10,7 @@
     "company",
     "gpt_model",
     "gpt_key",
-    "erp_site_name"
+    "storage_dir"
   ],
   "fields": [
     {
