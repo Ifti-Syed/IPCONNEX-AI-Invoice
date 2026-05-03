@@ -1,0 +1,19 @@
+[project]
+name = "ipconnex_ai_invoice"
+authors = [
+    { name = "Frappe", email = "voip@ipconnex.com" }
+]
+description = "A frappe module based on chat gpt to extract data from invoices"
+readme = "README.md"
+requires-python = ">=3.10"
+version = "0.0.1"
+dependencies = [
+    "PyPDF2==3.0.1",
+    "openai==1.66.3",
+    "stripe",
+    "PyMuPDF>=1.23.0",
+]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
