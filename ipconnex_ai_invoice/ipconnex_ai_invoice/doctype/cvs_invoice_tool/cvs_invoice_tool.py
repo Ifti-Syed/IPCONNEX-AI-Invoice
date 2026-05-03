@@ -3,5 +3,5 @@ import frappe
 from frappe.model.document import Document
 from frappe import _
 
-class InvoiceImportTool(Document):
+class CvsInvoiceTool(Document):
     pass
