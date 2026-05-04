@@ -312,6 +312,19 @@ def _log_debug(title, details):
 
 
 # ===================================================
+# SITE UTILITIES
+# ===================================================
+
+@frappe.whitelist()
+def getSiteName():
+    try:
+        site_name = frappe.local.site
+        return json.dumps({"status": 1, "message": site_name})
+    except Exception as e:
+        return json.dumps({"status": 0, "message": str(e)})
+
+
+# ===================================================
 # MAIN METHOD (Frappe API)
 # ===================================================
 
