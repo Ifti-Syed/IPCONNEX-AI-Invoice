@@ -19,6 +19,8 @@
         "income_account",
         "currency",
         "invoice_date",
+        "supplier_invoice_no",
+        "supplier_invoice_date",
         "is_paid",
         "invoice_items",
         "invoice_total_amount",
@@ -111,6 +113,18 @@
             "fieldname": "invoice_date",
             "fieldtype": "Date",
             "label": "Invoice Date"
+        },
+        {
+            "depends_on": "eval:doc.invoice_type=='Purchase'",
+            "fieldname": "supplier_invoice_no",
+            "fieldtype": "Data",
+            "label": "Supplier Invoice No"
+        },
+        {
+            "depends_on": "eval:doc.invoice_type=='Purchase'",
+            "fieldname": "supplier_invoice_date",
+            "fieldtype": "Date",
+            "label": "Supplier Invoice Date"
         },
         {
             "fieldname": "invoice_items",

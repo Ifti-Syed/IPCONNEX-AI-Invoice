@@ -456,8 +456,27 @@ def extract_invoice_with_vision(pdf_path, company_doctype, account_name):
                         continue
                     break
 
-                # Success
-                return {"status": 1, "data": normalized}
+                # Success — check for duplicate bill
+                duplicate_warning = None
+                bill_no = normalized.get("bill_no", "")
+                supplier = normalized.get("supplier", "")
+                if bill_no and supplier:
+                    existing = frappe.db.get_value(
+                        "Purchase Invoice",
+                        {"bill_no": bill_no, "supplier": supplier, "docstatus": ["!=", 2]},
+                        ["name", "posting_date"],
+                        as_dict=True
+                    )
+                    if existing:
+                        duplicate_warning = _(
+                            "Duplicate bill detected: Supplier Invoice No {0} for supplier {1} "
+                            "already exists in Purchase Invoice {2} (Date: {3})."
+                        ).format(bill_no, supplier, existing.name, existing.posting_date)
+
+                result = {"status": 1, "data": normalized}
+                if duplicate_warning:
+                    result["duplicate_warning"] = duplicate_warning
+                return result
 
             except Exception as e:
                 last_error = str(e)

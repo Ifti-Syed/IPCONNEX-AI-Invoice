@@ -59,12 +59,22 @@ frappe.ui.form.on("Cvs Invoice Tool", {
 
             if (frm.doc.invoice_type === "Purchase") {
               frm.set_value("supplier_name", data.supplier || "");
+              frm.set_value("supplier_invoice_no", data.bill_no || "");
+              frm.set_value("supplier_invoice_date", data.bill_date || "");
             } else {
               frm.set_value("customer_name", data.company || "");
             }
 
             frm.set_value("invoice_date", data.bill_date || "");
             frm.set_value("currency", data.currency || frm.doc.currency);
+
+            if (r.message.duplicate_warning) {
+              frappe.msgprint({
+                title: __("Duplicate Supplier Bill"),
+                message: r.message.duplicate_warning,
+                indicator: "orange",
+              });
+            }
             frm.set_value("extracted_amount", data.total_amount || 0);
 
             let items = data.items || [];
@@ -442,6 +452,8 @@ function create_purchase_invoice(frm, inv_items) {
         doctype: "Purchase Invoice",
         supplier: frm.doc.supplier_name,
         posting_date: frm.doc.invoice_date,
+        bill_no: frm.doc.supplier_invoice_no || "",
+        bill_date: frm.doc.supplier_invoice_date || frm.doc.invoice_date,
         company: company_name,
         currency: frm.doc.currency,
         items: inv_items,
