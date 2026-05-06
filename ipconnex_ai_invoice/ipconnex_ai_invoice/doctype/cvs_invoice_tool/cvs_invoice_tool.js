@@ -85,7 +85,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
               if (!row.amount || row.amount <= 0) return;
               invoice_items.push({
                 item_code:
-                  frm.doc.invoice_default_item || row.item_code || "99-Purchases",
+                  row.item_code || frm.doc.invoice_default_item || "99-Purchases",
                 item_description:
                   row.item_description || row.item_name || "Auto-imported item",
                 item_qty: row.qty || 1,
