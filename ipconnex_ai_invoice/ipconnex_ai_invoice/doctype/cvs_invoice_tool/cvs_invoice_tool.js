@@ -440,14 +440,34 @@ function create_sales_invoice(frm, inv_items) {
 function create_purchase_invoice(frm, inv_items) {
   frappe.dom.freeze(__("Creating Purchase Invoice — please wait..."));
 
-  frappe.db
-    .get_doc("Supplier", frm.doc.supplier_name)
-    .then((supplier_doc) => {
-      let company_name = frm.doc.company;
-      if (supplier_doc.accounts?.length) {
-        company_name = supplier_doc.accounts[0].company;
-      }
+  let company_name = frm.doc.company;
 
+  frappe.call({
+    method: "frappe.client.get_value",
+    args: {
+      doctype: "Party Account",
+      filters: {
+        parenttype: "Supplier",
+        parent: frm.doc.supplier_name,
+        company: company_name,
+      },
+      fieldname: "account",
+    },
+  })
+    .then((r) => {
+      let credit_to = r?.message?.account;
+      if (credit_to) return credit_to;
+
+      return frappe.call({
+        method: "frappe.client.get_value",
+        args: {
+          doctype: "Company",
+          filters: { name: company_name },
+          fieldname: "default_payable_account",
+        },
+      }).then((r2) => r2?.message?.default_payable_account || "");
+    })
+    .then((credit_to) => {
       let doc = {
         doctype: "Purchase Invoice",
         supplier: frm.doc.supplier_name,
@@ -458,6 +478,8 @@ function create_purchase_invoice(frm, inv_items) {
         currency: frm.doc.currency,
         items: inv_items,
       };
+
+      if (credit_to) doc.credit_to = credit_to;
 
       if (frm.doc.is_paid) {
         doc.is_paid = 1;
