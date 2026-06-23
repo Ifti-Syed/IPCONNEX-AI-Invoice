@@ -17,32 +17,32 @@
       "fieldname": "company",
       "fieldtype": "Link",
       "label": "Company",
-      "Mandatory": "Checked",
+      "reqd": 1,
       "options": "Company"
     },
     {
       "fieldname": "gpt_key",
       "fieldtype": "Data",
       "label": "GPT API Key",
-      "Mandatory": "Checked",
+      "reqd": 1,
       "length": 200
     },
     {
       "fieldname": "gpt_model",
       "fieldtype": "Select",
       "label": "GPT API Model",
-      "options": "gpt-4o-mini",
-      "Mandatory": "Checked"
+      "options": "gpt-4o\ngpt-4o-mini",
+      "reqd": 1
     },
     {
       "fieldname": "storage_dir",
       "fieldtype": "Data",
-      "Mandatory": "Checked",
+      "reqd": 1,
       "label": "Storage Directory"
     }
   ],
   "links": [],
-  "modified": "2023-12-10 00:00:00.000000",
+  "modified": "2026-06-23 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "IPCONNEX AI Invoice",
   "name": "GPT Setting",

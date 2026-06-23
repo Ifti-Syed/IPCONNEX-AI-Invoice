@@ -85,7 +85,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
               if (!row.amount || row.amount <= 0) return;
               invoice_items.push({
                 item_code:
-                  row.item_code || frm.doc.invoice_default_item || "99-Purchases",
+                  row.item_code || frm.doc.invoice_default_item || "",
                 item_description:
                   row.item_description || row.item_name || "Auto-imported item",
                 item_qty: row.qty || 1,
@@ -135,6 +135,42 @@ frappe.ui.form.on("Cvs Invoice Tool", {
       .on("click", () => {
         if ($("button[data-fieldname='generate_invoice']").prop("disabled"))
           return;
+
+        if (!frm.doc.invoice_type) {
+          frappe.msgprint({
+            title: __("Invoice Type Required"),
+            message: __("Please select an Invoice Type (Purchase or Sales)."),
+            indicator: "orange",
+          });
+          return;
+        }
+
+        if (frm.doc.invoice_type === "Purchase" && !frm.doc.supplier_name) {
+          frappe.msgprint({
+            title: __("Supplier Required"),
+            message: __("Please select a Supplier before generating a Purchase Invoice."),
+            indicator: "orange",
+          });
+          return;
+        }
+
+        if (frm.doc.invoice_type === "Sales" && !frm.doc.customer_name) {
+          frappe.msgprint({
+            title: __("Customer Required"),
+            message: __("Please select a Customer before generating a Sales Invoice."),
+            indicator: "orange",
+          });
+          return;
+        }
+
+        if (frm.doc.invoice_type === "Sales" && !frm.doc.income_account) {
+          frappe.msgprint({
+            title: __("Income Account Required"),
+            message: __("Please set an Income Account before generating a Sales Invoice."),
+            indicator: "red",
+          });
+          return;
+        }
 
         if (!frm.doc.invoice_date) {
           frappe.msgprint({
@@ -375,20 +411,18 @@ function attach_file(frm, doctype, docname) {
 function create_sales_invoice(frm, inv_items) {
   frappe.dom.freeze(__("Creating Sales Invoice — please wait..."));
 
+  let si_company = frm.doc.company;
+
   frappe.db
     .get_doc("Customer", frm.doc.customer_name)
-    .then((customer_doc) => {
-      let company_name = frm.doc.company;
-      if (customer_doc.accounts?.length) {
-        company_name = customer_doc.accounts[0].company;
-      }
-
+    .then((_customer_doc) => {
       let doc = {
         doctype: "Sales Invoice",
         customer: frm.doc.customer_name,
         posting_date: frm.doc.invoice_date,
-        company: company_name,
+        company: si_company,
         currency: frm.doc.currency,
+        income_account: frm.doc.income_account,
         items: inv_items,
       };
 
@@ -442,30 +476,21 @@ function create_purchase_invoice(frm, inv_items) {
 
   let company_name = frm.doc.company;
 
-  frappe.call({
-    method: "frappe.client.get_value",
-    args: {
-      doctype: "Party Account",
-      filters: {
-        parenttype: "Supplier",
-        parent: frm.doc.supplier_name,
-        company: company_name,
-      },
-      fieldname: "account",
-    },
-  })
-    .then((r) => {
-      let credit_to = r?.message?.account;
+  frappe.db
+    .get_doc("Supplier", frm.doc.supplier_name)
+    .then((supplier_doc) => {
+      // Resolve credit_to from supplier's accounts child table for this company
+      let credit_to = "";
+      if (supplier_doc.accounts && supplier_doc.accounts.length) {
+        let match = supplier_doc.accounts.find((a) => a.company === company_name);
+        if (match) credit_to = match.account;
+      }
       if (credit_to) return credit_to;
 
-      return frappe.call({
-        method: "frappe.client.get_value",
-        args: {
-          doctype: "Company",
-          filters: { name: company_name },
-          fieldname: "default_payable_account",
-        },
-      }).then((r2) => r2?.message?.default_payable_account || "");
+      // Fall back to Company's default payable account
+      return frappe.db
+        .get_value("Company", company_name, "default_payable_account")
+        .then((r) => r?.message?.default_payable_account || "");
     })
     .then((credit_to) => {
       let doc = {
@@ -487,9 +512,17 @@ function create_purchase_invoice(frm, inv_items) {
         doc.cash_bank_account = frm.doc.cash_bank_account;
       }
 
-      return frappe.call({
-        method: "frappe.client.insert",
-        args: { doc },
+      // Wrap frappe.call in a native Promise to preserve .finally() on the chain
+      return new Promise((resolve, reject) => {
+        frappe.call({
+          method: "frappe.client.insert",
+          args: { doc },
+          callback: (r) => {
+            if (r?.message) resolve(r);
+            else reject(new Error(__("No response from server.")));
+          },
+          error: reject,
+        });
       });
     })
     .then((r) => {

@@ -92,7 +92,8 @@ def normalize_and_validate(payload, allowed_companies, default_company):
         "company": _safe_str(payload.get("company", "")),
         "bill_no": _safe_str(payload.get("bill_no", "")),
         "bill_date": _safe_str(payload.get("bill_date", "")) or "YYYY-MM-DD",
-        # keep these two since your standalone expects them sometimes
+        "currency": _safe_str(payload.get("currency", "")),
+        "total_amount": _safe_float(payload.get("total_amount", 0.0)),
         "mode_of_payment": _safe_str(payload.get("mode_of_payment", "")),
         "paid_amount": _safe_float(payload.get("paid_amount", 0.0)),
         "items": payload.get("items", []),
@@ -259,6 +260,8 @@ REQUIRED JSON STRUCTURE (MUST MATCH EXACTLY):
   "company": "",
   "bill_no": "",
   "bill_date": "YYYY-MM-DD",
+  "currency": "",
+  "total_amount": 0.0,
   "mode_of_payment": "",
   "paid_amount": 0.0,
   "items": [
@@ -287,7 +290,9 @@ EXTRACTION GUIDELINES:
 - Map "Invoice Number", "Invoice ID", "Bill No" and Arabic equivalents (e.g., رقم الفاتورة) to "bill_no"
 - Map "Invoice Date", "Date", "Bill Date" and Arabic equivalents (e.g., تاريخ الفاتورة, التاريخ) to "bill_date"
 - Map "Payment Method", "Payment Type" and Arabic equivalents (e.g., طريقة الدفع) to "mode_of_payment"
-- For currency: Extract from printed amounts (e.g., QAR, AED, ر.ق, د.إ) or currency symbols
+- Map "Total", "Grand Total", "Amount Due", "Invoice Total" and Arabic equivalents (e.g., الإجمالي, المبلغ الإجمالي) to "total_amount"
+- Map "Amount Paid", "Paid" and Arabic equivalents to "paid_amount" (0.0 if invoice is unpaid)
+- For currency: Extract from printed amounts (e.g., QAR, AED, ر.ق, د.إ) or currency symbols and set in "currency" field (e.g. "AED", "QAR", "USD")
 - For items: Extract per line item (description, qty, rate, amount, uom)
 - For taxes: Extract tax descriptions (VAT, ضريبة القيمة المضافة, etc.) and amounts
 """.strip()
@@ -350,7 +355,7 @@ def extract_invoice_with_vision(pdf_path, company_doctype, account_name):
         if not companies:
             frappe.throw(_("No companies found in the provided company doctype"))
 
-        default_company = "Central Ventilation Systems Co. W.L.L. - Doha"
+        default_company = companies[0]
         company_list = ", ".join([f'"{c}"' for c in companies])
         prompt = build_prompt(company_list, default_company)
 
