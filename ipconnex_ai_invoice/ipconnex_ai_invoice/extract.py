@@ -234,6 +234,7 @@ LANGUAGE RULES (IMPORTANT):
 - DO NOT translate proper names: keep supplier and company names exactly as written (Arabic stays Arabic).
 - Extract numbers exactly as shown.
 - If labels are Arabic (e.g., رقم الفاتورة, تاريخ, المورد), map them to the same fields.
+- Arabic invoices are read RIGHT-TO-LEFT: in Arabic tables the rightmost column is typically the description and the leftmost is the amount. Map columns by their header label, not their visual position.
 
 STRICT EXTRACTION RULES:
 1. OUTPUT FORMAT: Return ONLY a single valid JSON object. No additional text.
@@ -251,6 +252,24 @@ STRICT EXTRACTION RULES:
    - UOM: Look for abbreviations like "Ea", "Pcs", "Box", "Set", "Kg", "Ltr", "Meter". If no UOM is found, use "".
    - If no taxes found, use empty array: "taxes": []
 
+LINE ITEM EXTRACTION RULES (CRITICAL — READ CAREFULLY):
+1. EXTRACT EVERY SINGLE LINE ITEM — do not skip, summarize, or omit any row that represents a product or service.
+2. NEVER merge or combine multiple line items into one, even if they have the same description or product name. Each row in the invoice table = one separate object in the "items" array.
+3. If the invoice spans MULTIPLE PAGES, scan all pages and collect items from every page. Items often continue on page 2, 3, etc. — include all of them.
+4. SKIP these row types — they are NOT items:
+   - Subtotal rows (e.g., "Subtotal", "Sub-Total", "المجموع الفرعي")
+   - Total rows (e.g., "Total", "Grand Total", "الإجمالي")
+   - Tax rows inside the item table (capture those in "taxes" array instead)
+   - Section headers or category dividers
+   - Empty rows or decorative lines
+   - Notes, terms, or remarks rows
+5. If a row has an amount but no separate qty and rate:
+   - Set qty = 1.0
+   - Set rate = the printed amount
+   - Set amount = the printed amount
+6. If a description wraps across two visual lines, treat them as ONE item — join the text.
+7. Leave "item_code" and "expense_account" as "" for every item — do not guess these values.
+
 IMPORTANT:
 - DO NOT CALCULATE totals or amounts. ONLY EXTRACT what is printed on the invoice.
 
@@ -267,10 +286,28 @@ REQUIRED JSON STRUCTURE (MUST MATCH EXACTLY):
   "items": [
     {{
       "item_code": "",
-      "item_name": "",
-      "qty": 0.0,
-      "rate": 0.0,
-      "amount": 0.0,
+      "item_name": "First product or service description exactly as printed",
+      "qty": 1.0,
+      "rate": 100.0,
+      "amount": 100.0,
+      "uom": "",
+      "expense_account": ""
+    }},
+    {{
+      "item_code": "",
+      "item_name": "Second product or service description exactly as printed",
+      "qty": 2.0,
+      "rate": 50.0,
+      "amount": 100.0,
+      "uom": "",
+      "expense_account": ""
+    }},
+    {{
+      "item_code": "",
+      "item_name": "Third product — every row becomes its own object",
+      "qty": 1.0,
+      "rate": 200.0,
+      "amount": 200.0,
       "uom": "",
       "expense_account": ""
     }}
@@ -293,8 +330,8 @@ EXTRACTION GUIDELINES:
 - Map "Total", "Grand Total", "Amount Due", "Invoice Total" and Arabic equivalents (e.g., الإجمالي, المبلغ الإجمالي) to "total_amount"
 - Map "Amount Paid", "Paid" and Arabic equivalents to "paid_amount" (0.0 if invoice is unpaid)
 - For currency: Extract from printed amounts (e.g., QAR, AED, ر.ق, د.إ) or currency symbols and set in "currency" field (e.g. "AED", "QAR", "USD")
-- For items: Extract per line item (description, qty, rate, amount, uom)
-- For taxes: Extract tax descriptions (VAT, ضريبة القيمة المضافة, etc.) and amounts
+- For items: one JSON object per invoice table row — use item_name for the description exactly as printed
+- For taxes: Extract tax descriptions (VAT, ضريبة القيمة المضافة, etc.) and amounts into the "taxes" array
 """.strip()
 
 
