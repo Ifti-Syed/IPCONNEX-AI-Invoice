@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 
 app_name = "ipconnex_ai_invoice"
 app_title = "IPCONNEX AI Invoice"
-app_publisher = "Frappe"
+app_publisher = "Iftikhar Hussain Syed"
 app_description = "Invoice Extraction Module created by IPCONNEX"
 app_icon = "octicon octicon-file-directory"
 app_color = "grey"
-app_email = "voip@ipconnex.com"
+app_email = "iftikhar.hussain@cvshvac.com"
 app_license = "MIT"
 app_version = '0.0.1'
 

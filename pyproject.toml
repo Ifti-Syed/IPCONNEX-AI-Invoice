@@ -1,7 +1,7 @@
 [project]
 name = "ipconnex_ai_invoice"
 authors = [
-    { name = "Frappe", email = "voip@ipconnex.com" }
+    { name = "Iftikhar Hussain Syed", email = "iftikhar.hussain@cvshvac.com" }
 ]
 description = "A frappe module based on chat gpt to extract data from invoices"
 readme = "README.md"
