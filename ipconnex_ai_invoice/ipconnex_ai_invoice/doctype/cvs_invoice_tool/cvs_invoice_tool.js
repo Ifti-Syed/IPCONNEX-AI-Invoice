@@ -108,6 +108,11 @@ frappe.ui.form.on("Cvs Invoice Tool", {
                 ) / 100,
             });
 
+            if (frm.doc.invoice_type === "Purchase") {
+              apply_extracted_taxes(frm, data.taxes || []);
+              apply_extracted_discount(frm, data, total);
+            }
+
             frappe.show_alert(
               {
                 message: __(
@@ -205,6 +210,22 @@ frappe.ui.form.on("Cvs Invoice Tool", {
           return;
         }
 
+        if (frm.doc.invoice_type === "Purchase") {
+          for (let row of frm.doc.invoice_taxes || []) {
+            if (!row.account_head) {
+              frappe.msgprint({
+                title: __("Missing Tax Account"),
+                message: __(
+                  "Please set an Account Head for the tax row: <b>{0}</b>",
+                  [row.description || row.idx]
+                ),
+                indicator: "red",
+              });
+              return;
+            }
+          }
+        }
+
         let items = frm.doc.invoice_items || [];
         if (!items.length) {
           frappe.msgprint({
@@ -274,38 +295,16 @@ frappe.ui.form.on("Cvs Invoice Tool", {
   },
 
   mode_of_payment(frm) {
-    if (
-      frm.doc.is_paid &&
-      frm.doc.mode_of_payment &&
-      frm.doc.invoice_type === "Purchase"
-    ) {
-      frappe.call({
-        method: "frappe.client.get_value",
-        args: {
-          doctype: "Mode of Payment Account",
-          filters: {
-            parent: frm.doc.mode_of_payment,
-            company: frm.doc.company,
-          },
-          fieldname: ["default_account"],
-        },
-        callback(r) {
-          if (r.message?.default_account) {
-            frm.set_value("cash_bank_account", r.message.default_account);
-          } else {
-            frappe.msgprint({
-              title: __("Default Account Not Found"),
-              message: __(
-                'No default Cash/Bank account is configured for <b>{0}</b>. '
-                + 'Please configure it in Mode of Payment settings, or select an account manually.',
-                [frm.doc.mode_of_payment]
-              ),
-              indicator: "orange",
-            });
-          }
-        },
-      });
-    }
+    fetch_cash_bank_account(frm);
+  },
+
+  company(frm) {
+    fetch_cash_bank_account(frm);
+    fetch_default_expense_account(frm);
+  },
+
+  invoice_default_item(frm) {
+    fetch_default_expense_account(frm);
   },
 
   gpt_account(frm) {
@@ -317,6 +316,87 @@ frappe.ui.form.on("Cvs Invoice Tool", {
       });
   },
 });
+
+// -----------------------------------------------
+// Auto-fetch: Cash/Bank Account from Mode of Payment + Company
+// -----------------------------------------------
+function fetch_cash_bank_account(frm) {
+  if (
+    !frm.doc.is_paid ||
+    !frm.doc.mode_of_payment ||
+    !frm.doc.company ||
+    frm.doc.invoice_type !== "Purchase"
+  ) {
+    return;
+  }
+
+  frappe.call({
+    method: "frappe.client.get_value",
+    args: {
+      doctype: "Mode of Payment Account",
+      filters: {
+        parent: frm.doc.mode_of_payment,
+        company: frm.doc.company,
+      },
+      fieldname: ["default_account"],
+    },
+    callback(r) {
+      if (r.message?.default_account) {
+        frm.set_value("cash_bank_account", r.message.default_account);
+      } else {
+        frm.set_value("cash_bank_account", "");
+        frappe.msgprint({
+          title: __("Default Account Not Found"),
+          message: __(
+            'No default Cash/Bank account is configured for <b>{0}</b> in company <b>{1}</b>. '
+            + 'Please configure it in Mode of Payment settings, or select an account manually.',
+            [frm.doc.mode_of_payment, frm.doc.company]
+          ),
+          indicator: "orange",
+        });
+      }
+    },
+  });
+}
+
+// -----------------------------------------------
+// Auto-fetch: Default Expense Account from Item/Item Group/Company defaults
+// -----------------------------------------------
+function fetch_default_expense_account(frm) {
+  if (
+    !frm.doc.invoice_default_item ||
+    !frm.doc.company ||
+    frm.doc.invoice_type !== "Purchase"
+  ) {
+    return;
+  }
+
+  frappe.call({
+    method:
+      "ipconnex_ai_invoice.ipconnex_ai_invoice.doctype.cvs_invoice_tool.cvs_invoice_tool.get_expense_account",
+    args: {
+      item_code: frm.doc.invoice_default_item,
+      company: frm.doc.company,
+    },
+    callback(r) {
+      if (r.message?.expense_account) {
+        frm.set_value("default_expense_account", r.message.expense_account);
+      } else {
+        frm.set_value("default_expense_account", "");
+        frappe.show_alert(
+          {
+            message: __(
+              "No default Expense Account found for item {0} in company {1}. Please select one manually.",
+              [frm.doc.invoice_default_item, frm.doc.company]
+            ),
+            indicator: "orange",
+          },
+          6
+        );
+      }
+    },
+  });
+}
 
 // -----------------------------------------------
 // Error Handler
@@ -386,6 +466,84 @@ function toggle_cash_bank_account(frm) {
   frm.toggle_display("cash_bank_account", show);
   if (!show && frm.doc.cash_bank_account) {
     frm.set_value("cash_bank_account", "");
+  }
+}
+
+// -----------------------------------------------
+// Extracted Taxes -> Taxes and Charges table
+// -----------------------------------------------
+function apply_extracted_taxes(frm, taxes) {
+  let rows = (taxes || []).filter((t) => t.tax_amount && t.tax_amount > 0);
+
+  if (!rows.length) {
+    frm.set_value("invoice_taxes", []);
+    frm.refresh_field("invoice_taxes");
+    return;
+  }
+
+  let invoice_taxes = rows.map((t) => ({
+    type: "Actual",
+    description: t.description || __("Tax"),
+    tax_amount: t.tax_amount,
+    rate: t.tax_rate || 0,
+    account_head: "",
+  }));
+
+  frm.set_value("invoice_taxes", invoice_taxes);
+  frm.refresh_field("invoice_taxes");
+
+  if (!frm.doc.company) return;
+
+  frappe.call({
+    method:
+      "ipconnex_ai_invoice.ipconnex_ai_invoice.doctype.cvs_invoice_tool.cvs_invoice_tool.get_default_tax_account",
+    args: { company: frm.doc.company },
+    callback(r) {
+      let account_head = r.message?.account_head;
+      if (!account_head) {
+        frappe.show_alert(
+          {
+            message: __(
+              "No default Tax Account configured for company {0}. Please set an Account Head for each tax row manually.",
+              [frm.doc.company]
+            ),
+            indicator: "orange",
+          },
+          8
+        );
+        return;
+      }
+      (frm.doc.invoice_taxes || []).forEach((row) => {
+        if (!row.account_head) {
+          frappe.model.set_value(row.doctype, row.name, "account_head", account_head);
+        }
+      });
+    },
+  });
+}
+
+// -----------------------------------------------
+// Extracted Discount -> Additional Discount Percentage
+// Resolves to a percentage either way, using the recomputed item total
+// (the reliable pre-discount base) so we never double count discounts
+// already baked into individual item rates.
+// -----------------------------------------------
+function apply_extracted_discount(frm, data, items_total_cents) {
+  let base = (items_total_cents || 0) / 100;
+  if (!base && data.subtotal) base = data.subtotal;
+
+  let pct = 0;
+  if (data.discount_percentage && data.discount_percentage > 0) {
+    pct = data.discount_percentage;
+  } else if (data.discount_amount && data.discount_amount > 0 && base > 0) {
+    pct = (data.discount_amount / base) * 100;
+  }
+
+  if (pct > 0) {
+    frm.set_value("apply_discount_on", "Net Total");
+    frm.set_value("additional_discount_percentage", Math.round(pct * 10000) / 10000);
+  } else {
+    frm.set_value("additional_discount_percentage", 0);
   }
 }
 
@@ -512,6 +670,21 @@ function create_purchase_invoice(frm, inv_items) {
         doc.cash_bank_account = frm.doc.cash_bank_account;
       }
 
+      if ((frm.doc.invoice_taxes || []).length) {
+        doc.taxes = frm.doc.invoice_taxes.map((row) => ({
+          charge_type: row.type || "Actual",
+          account_head: row.account_head,
+          description: row.description || __("Tax"),
+          rate: row.rate || 0,
+          tax_amount: row.tax_amount || 0,
+        }));
+      }
+
+      if (frm.doc.additional_discount_percentage) {
+        doc.apply_discount_on = frm.doc.apply_discount_on || "Net Total";
+        doc.additional_discount_percentage = frm.doc.additional_discount_percentage;
+      }
+
       // Wrap frappe.call in a native Promise to preserve .finally() on the chain
       return new Promise((resolve, reject) => {
         frappe.call({
@@ -570,6 +743,30 @@ frappe.ui.form.on("Invoice Import Tool Item", {
   },
   invoice_items_remove(frm) {
     recalc_items(frm);
+  },
+  item_code(frm, cdt, cdn) {
+    let row = frappe.get_doc(cdt, cdn);
+    if (
+      !row.item_code ||
+      row.expense_account ||
+      !frm.doc.company ||
+      frm.doc.invoice_type !== "Purchase"
+    ) {
+      return;
+    }
+    frappe.call({
+      method:
+        "ipconnex_ai_invoice.ipconnex_ai_invoice.doctype.cvs_invoice_tool.cvs_invoice_tool.get_expense_account",
+      args: {
+        item_code: row.item_code,
+        company: frm.doc.company,
+      },
+      callback(r) {
+        if (r.message?.expense_account) {
+          frappe.model.set_value(cdt, cdn, "expense_account", r.message.expense_account);
+        }
+      },
+    });
   },
 });
 

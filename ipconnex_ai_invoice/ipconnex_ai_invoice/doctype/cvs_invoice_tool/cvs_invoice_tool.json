@@ -23,6 +23,9 @@
         "supplier_invoice_date",
         "is_paid",
         "invoice_items",
+        "invoice_taxes",
+        "apply_discount_on",
+        "additional_discount_percentage",
         "invoice_total_amount",
         "extracted_amount",
         "difference",
@@ -131,6 +134,27 @@
             "fieldtype": "Table",
             "label": "Items",
             "options": "Invoice Import Tool Item"
+        },
+        {
+            "depends_on": "eval:doc.invoice_type=='Purchase'",
+            "fieldname": "invoice_taxes",
+            "fieldtype": "Table",
+            "label": "Taxes and Charges",
+            "options": "Invoice Import Tool Tax"
+        },
+        {
+            "depends_on": "eval:doc.invoice_type=='Purchase'",
+            "default": "Net Total",
+            "fieldname": "apply_discount_on",
+            "fieldtype": "Select",
+            "label": "Apply Additional Discount On",
+            "options": "Grand Total\nNet Total"
+        },
+        {
+            "depends_on": "eval:doc.invoice_type=='Purchase'",
+            "fieldname": "additional_discount_percentage",
+            "fieldtype": "Percent",
+            "label": "Additional Discount Percentage"
         },
         {
             "fieldname": "invoice_total_amount",

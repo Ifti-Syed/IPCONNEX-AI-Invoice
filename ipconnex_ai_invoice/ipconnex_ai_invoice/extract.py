@@ -74,6 +74,39 @@ def _safe_float(v, default=0.0):
         return float(default)
 
 
+_CURRENCY_MAP = {
+    "AED": "AED", "DIRHAM": "AED", "DIRHAMS": "AED", "D.إ": "AED",
+    "د.إ": "AED", "درهم": "AED", "دراهم": "AED", "درهم إماراتي": "AED",
+    "SAR": "SAR", "SAUDI RIYAL": "SAR", "ر.س": "SAR", "ريال سعودي": "SAR",
+    "QAR": "QAR", "QATARI RIYAL": "QAR", "ر.ق": "QAR", "ريال قطري": "QAR",
+    "OMR": "OMR", "OMANI RIAL": "OMR", "ر.ع": "OMR", "ريال عماني": "OMR",
+    "KWD": "KWD", "KUWAITI DINAR": "KWD", "د.ك": "KWD", "دينار كويتي": "KWD",
+    "BHD": "BHD", "BAHRAINI DINAR": "BHD", "د.ب": "BHD", "دينار بحريني": "BHD",
+    "EGP": "EGP", "EGYPTIAN POUND": "EGP", "ج.م": "EGP", "جنيه مصري": "EGP",
+    "USD": "USD", "US DOLLAR": "USD", "DOLLAR": "USD", "$": "USD", "دولار": "USD", "دولار أمريكي": "USD",
+    "EUR": "EUR", "EURO": "EUR", "€": "EUR", "يورو": "EUR",
+    "GBP": "GBP", "POUND STERLING": "GBP", "£": "GBP", "جنيه إسترليني": "GBP",
+}
+
+
+def _normalize_currency(raw):
+    """
+    Map Arabic/verbose currency names and symbols to standard ISO codes
+    (AED, QAR, SAR, USD, ...). Leaves unrecognized values unchanged rather
+    than guessing.
+    """
+    if not raw:
+        return ""
+    key = raw.strip()
+    if key.upper() in _CURRENCY_MAP:
+        return _CURRENCY_MAP[key.upper()]
+    if key in _CURRENCY_MAP:
+        return _CURRENCY_MAP[key]
+    if re.fullmatch(r"[A-Za-z]{3}", key):
+        return key.upper()
+    return key
+
+
 def _safe_str(v, default=""):
     if v is None:
         return default
@@ -120,9 +153,11 @@ def normalize_and_validate(payload, allowed_companies, default_company):
         "company": _safe_str(payload.get("company", "")),
         "bill_no": _safe_str(payload.get("bill_no", "")),
         "bill_date": _safe_str(payload.get("bill_date", "")) or "YYYY-MM-DD",
-        "currency": _safe_str(payload.get("currency", "")),
+        "currency": _normalize_currency(_safe_str(payload.get("currency", ""))),
         "subtotal": _safe_float(payload.get("subtotal", 0.0)),
         "total_amount": _safe_float(payload.get("total_amount", 0.0)),
+        "discount_percentage": _safe_float(payload.get("discount_percentage", 0.0)),
+        "discount_amount": _safe_float(payload.get("discount_amount", 0.0)),
         "mode_of_payment": _safe_str(payload.get("mode_of_payment", "")),
         "paid_amount": _safe_float(payload.get("paid_amount", 0.0)),
         "items": payload.get("items", []),
@@ -160,6 +195,7 @@ def normalize_and_validate(payload, allowed_companies, default_company):
         norm_taxes.append({
             "description": _safe_str(tx.get("description", "")),
             "tax_amount": _safe_float(tx.get("tax_amount", 0.0)),
+            "tax_rate": _safe_float(tx.get("tax_rate", 0.0)),
             "tax_currency": _safe_str(tx.get("tax_currency", "")),
         })
     result["taxes"] = norm_taxes
@@ -320,6 +356,22 @@ LANGUAGE RULES (IMPORTANT):
 - Extract numbers exactly as shown.
 - If labels are Arabic (e.g., رقم الفاتورة, تاريخ, المورد), map them to the same fields.
 - Arabic invoices are read RIGHT-TO-LEFT: map columns by their HEADER LABEL, not their visual position.
+- Item descriptions (item_name): copy them EXACTLY as printed, in their original language. Do NOT translate
+  them into English or any other language — translation can change technical/product meaning. Only the
+  structured ERP-facing fields (currency, dates, numbers) should be normalized to standard formats.
+
+MULTI-PAGE / SUPPORTING DOCUMENT RULES (CRITICAL):
+- A single PDF may contain the actual invoice PLUS other pages: delivery notes, goods-received notes,
+  payment receipts/slips, statements, terms & conditions, or signature pages.
+- First identify which page(s) are the genuine INVOICE (look for a header/title such as "Invoice", "Tax
+  Invoice", "فاتورة", "فاتورة ضريبية", an invoice number, and a line-item table with prices).
+- Extract "items" ONLY from the genuine invoice's line-item table(s). If the invoice's own item table
+  continues onto a following page (same table, same columns), include those rows too.
+- DO NOT create item rows from: delivery notes, goods-received notes, payment/remittance details,
+  statements of account, summary/cover pages, terms and conditions, notes, or signature blocks — even if
+  those pages list product names or amounts.
+- If a page is ambiguous (not clearly the invoice and not clearly a supporting document), prefer excluding
+  its rows over guessing.
 
 STRICT EXTRACTION RULES:
 1. OUTPUT FORMAT: Return ONLY a single valid JSON object. No additional text.
@@ -336,6 +388,23 @@ STRICT EXTRACTION RULES:
    - For items: Extract quantity, unit price, amount, and unit of measure (UOM)
    - UOM: Look for abbreviations like "Ea", "Pcs", "Box", "Set", "Kg", "Ltr", "Meter". If no UOM is found, use "".
    - If no taxes found, use empty array: "taxes": []
+   - For each tax: the printed tax RATE (VAT %) is NOT fixed — it varies by invoice and by tax type
+     (e.g. 5%, 15%, 0%, exempt). NEVER assume a common default like 5%. Read the actual printed
+     percentage next to the tax label (e.g. "VAT 15%", "ضريبة القيمة المضافة 5%") and set "tax_rate" to
+     that number. If only an amount is printed and no percentage is shown anywhere, leave "tax_rate" as
+     0.0 — do not back-calculate or guess a rate.
+8. Discount (discount_percentage, discount_amount):
+   - ONLY populate these when the invoice EXPLICITLY prints a discount line/label (e.g. "Discount",
+     "Disc %", "Less: Discount", "خصم", "نسبة الخصم", "خصم بنسبة").
+   - If the invoice prints a discount PERCENTAGE, set "discount_percentage" to that number and leave
+     "discount_amount" as 0.0.
+   - If the invoice prints a discount AMOUNT (not a percentage), set "discount_amount" to that number and
+     leave "discount_percentage" as 0.0.
+   - If both are printed, populate both.
+   - DO NOT infer or calculate a discount just because the subtotal and total differ (that difference may
+     be tax, rounding, or shipping). Only extract a discount that is explicitly labeled as such.
+   - If item rows are already printed at a discounted unit price (i.e. there is no separate discount
+     line), leave both discount fields at 0.0 — do not double count.
 
 LINE ITEM EXTRACTION RULES (CRITICAL — READ CAREFULLY):
 1. EXTRACT EVERY SINGLE LINE ITEM — do not skip, summarize, or omit any row that represents a product or service.
@@ -379,6 +448,8 @@ REQUIRED JSON STRUCTURE (MUST MATCH EXACTLY):
   "currency": "",
   "subtotal": 0.0,
   "total_amount": 0.0,
+  "discount_percentage": 0.0,
+  "discount_amount": 0.0,
   "mode_of_payment": "",
   "paid_amount": 0.0,
   "items": [
@@ -414,6 +485,7 @@ REQUIRED JSON STRUCTURE (MUST MATCH EXACTLY):
     {{
       "description": "",
       "tax_amount": 0.0,
+      "tax_rate": 0.0,
       "tax_currency": ""
     }}
   ]
@@ -428,9 +500,10 @@ FIELD MAPPING:
 - Map "Subtotal", "Sub-Total", "المجموع الفرعي" (the before-tax line total) to "subtotal"
 - Map "Total", "Grand Total", "Amount Due", "Invoice Total" and Arabic equivalents (e.g., الإجمالي, المبلغ الإجمالي) to "total_amount"
 - Map "Amount Paid", "Paid" and Arabic equivalents to "paid_amount" (0.0 if invoice is unpaid)
-- For currency: Extract from printed amounts (e.g., QAR, AED, ر.ق, د.إ) or currency symbols and set in "currency" field (e.g. "AED", "QAR", "USD")
-- For items: one JSON object per invoice table row — use item_name for the description exactly as printed
-- For taxes: Extract tax descriptions (VAT, ضريبة القيمة المضافة, etc.) and amounts into the "taxes" array
+- For currency: Extract from printed amounts (e.g., QAR, AED, ر.ق, د.إ) or currency symbols and set in "currency" field, ALWAYS as a standard 3-letter ISO code (e.g. "AED", "QAR", "SAR", "USD") — never leave it as an Arabic word or symbol.
+- For items: one JSON object per invoice table row — use item_name for the description exactly as printed, in its original language
+- For taxes: Extract tax descriptions (VAT, ضريبة القيمة المضافة, etc.), amounts, and the printed rate (%) into the "taxes" array — the rate is invoice-specific and must be read from the page, never assumed
+- For discount: Map "Discount", "Disc", "Less: Discount", "خصم" to "discount_percentage" (if a % is shown) or "discount_amount" (if a flat amount is shown) — only when explicitly printed
 """.strip()
 
 
