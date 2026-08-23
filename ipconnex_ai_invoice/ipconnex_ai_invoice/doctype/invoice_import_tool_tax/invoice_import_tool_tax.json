@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "add_deduct_tax",
   "type",
   "account_head",
   "description",
@@ -14,36 +15,63 @@
  ],
  "fields": [
   {
+   "default": "Add",
+   "columns": 1,
+   "fieldname": "add_deduct_tax",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Add or Deduct",
+   "options": "Add\nDeduct"
+  },
+  {
+   "columns": 2,
+   "default": "On Net Total",
    "fieldname": "type",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Type",
    "options": "Actual\nOn Net Total\nOn Previous Row Amount\nOn Previous Row Total"
   },
   {
+   "columns": 2,
    "fieldname": "account_head",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Account Head",
    "options": "Account"
   },
   {
+   "columns": 2,
    "fieldname": "description",
-   "fieldtype": "Data",
-   "label": "Description"
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Description",
+   "print_width": "300px",
+   "width": "300px"
   },
   {
+   "columns": 2,
    "fieldname": "rate",
    "fieldtype": "Float",
-   "label": "Rate"
+   "in_list_view": 1,
+   "label": "Tax Rate"
   },
   {
+   "columns": 2,
    "fieldname": "tax_amount",
    "fieldtype": "Currency",
-   "label": "Tax Amount"
+   "in_list_view": 1,
+   "label": "Amount",
+   "options": "currency"
   },
   {
+   "columns": 2,
    "fieldname": "total",
    "fieldtype": "Currency",
-   "label": "Total"
+   "in_list_view": 1,
+   "label": "Total",
+   "options": "currency",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,

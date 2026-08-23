@@ -100,18 +100,13 @@ frappe.ui.form.on("Cvs Invoice Tool", {
 
             frm.set_value("invoice_items", invoice_items);
             frm.refresh_field("invoice_items");
-            frm.set_value({
-              invoice_total_amount: total / 100,
-              difference:
-                Math.abs(
-                  total - Math.round((data.total_amount || 0) * 100)
-                ) / 100,
-            });
 
             if (frm.doc.invoice_type === "Purchase") {
               apply_extracted_taxes(frm, data.taxes || []);
               apply_extracted_discount(frm, data, total);
             }
+
+            recalc_taxes_and_totals(frm);
 
             frappe.show_alert(
               {
@@ -292,6 +287,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
 
   invoice_type(frm) {
     toggle_cash_bank_account(frm);
+    recalc_taxes_and_totals(frm);
   },
 
   mode_of_payment(frm) {
@@ -305,6 +301,20 @@ frappe.ui.form.on("Cvs Invoice Tool", {
 
   invoice_default_item(frm) {
     fetch_default_expense_account(frm);
+  },
+
+  apply_discount_on(frm) {
+    recalc_taxes_and_totals(frm);
+  },
+
+  additional_discount_percentage(frm) {
+    frm.doc.__discount_from_percentage = true;
+    recalc_taxes_and_totals(frm);
+  },
+
+  discount_amount(frm) {
+    frm.doc.__discount_from_percentage = false;
+    recalc_taxes_and_totals(frm);
   },
 
   gpt_account(frm) {
@@ -482,6 +492,7 @@ function apply_extracted_taxes(frm, taxes) {
   }
 
   let invoice_taxes = rows.map((t) => ({
+    add_deduct_tax: "Add",
     type: "Actual",
     description: t.description || __("Tax"),
     tax_amount: t.tax_amount,
@@ -672,6 +683,7 @@ function create_purchase_invoice(frm, inv_items) {
 
       if ((frm.doc.invoice_taxes || []).length) {
         doc.taxes = frm.doc.invoice_taxes.map((row) => ({
+          add_deduct_tax: row.add_deduct_tax || "Add",
           charge_type: row.type || "Actual",
           account_head: row.account_head,
           description: row.description || __("Tax"),
@@ -680,9 +692,10 @@ function create_purchase_invoice(frm, inv_items) {
         }));
       }
 
-      if (frm.doc.additional_discount_percentage) {
+      if (frm.doc.additional_discount_percentage || frm.doc.discount_amount) {
         doc.apply_discount_on = frm.doc.apply_discount_on || "Net Total";
-        doc.additional_discount_percentage = frm.doc.additional_discount_percentage;
+        doc.additional_discount_percentage = frm.doc.additional_discount_percentage || 0;
+        doc.discount_amount = frm.doc.discount_amount || 0;
       }
 
       // Wrap frappe.call in a native Promise to preserve .finally() on the chain
@@ -772,18 +785,119 @@ frappe.ui.form.on("Invoice Import Tool Item", {
 
 function recalc_items(frm) {
   setTimeout(() => {
-    let total = 0;
     (frm.doc.invoice_items || []).forEach((row) => {
       row.item_amount = (row.item_rate || 0) * (row.item_qty || 1);
-      total += Math.round(row.item_amount * 100);
     });
     frm.refresh_field("invoice_items");
-    frm.set_value({
-      invoice_total_amount: total / 100,
-      difference:
-        Math.abs(
-          total - Math.round((frm.doc.extracted_amount || 0) * 100)
-        ) / 100,
-    });
+    recalc_taxes_and_totals(frm);
   }, 200);
+}
+
+// -----------------------------------------------
+// Taxes and Charges table + discount events
+// (mirrors ERPNext's own tax/discount calculation)
+// -----------------------------------------------
+frappe.ui.form.on("Invoice Import Tool Tax", {
+  add_deduct_tax(frm) {
+    recalc_taxes_and_totals(frm);
+  },
+  type(frm) {
+    recalc_taxes_and_totals(frm);
+  },
+  rate(frm) {
+    recalc_taxes_and_totals(frm);
+  },
+  tax_amount(frm) {
+    recalc_taxes_and_totals(frm);
+  },
+  invoice_taxes_add(frm, cdt, cdn) {
+    let row = frappe.get_doc(cdt, cdn);
+    if (!row.add_deduct_tax) row.add_deduct_tax = "Add";
+    if (!row.type) row.type = "On Net Total";
+  },
+  invoice_taxes_remove(frm) {
+    recalc_taxes_and_totals(frm);
+  },
+});
+
+function recalc_taxes_and_totals(frm) {
+  if (frm.doc.invoice_type !== "Purchase") {
+    let total = 0;
+    (frm.doc.invoice_items || []).forEach((row) => {
+      total += flt(row.item_amount);
+    });
+    frm.set_value("invoice_total_amount", flt(total));
+    frm.set_value(
+      "difference",
+      Math.abs(flt(total) - flt(frm.doc.extracted_amount))
+    );
+    return;
+  }
+
+  let net_total = 0;
+  (frm.doc.invoice_items || []).forEach((row) => {
+    net_total += flt(row.item_amount);
+  });
+  net_total = flt(net_total);
+
+  let taxes = frm.doc.invoice_taxes || [];
+  let running_total = net_total;
+  let added = 0;
+  let deducted = 0;
+
+  taxes.forEach((row, i) => {
+    let tax_amount = 0;
+    let prev = i > 0 ? taxes[i - 1] : null;
+
+    if (row.type === "On Net Total") {
+      tax_amount = (net_total * flt(row.rate)) / 100;
+    } else if (row.type === "On Previous Row Amount" && prev) {
+      tax_amount = (flt(prev.tax_amount) * flt(row.rate)) / 100;
+    } else if (row.type === "On Previous Row Total" && prev) {
+      tax_amount = (flt(prev.total) * flt(row.rate)) / 100;
+    } else {
+      // "Actual" (or a reference row with nothing to compute from yet): keep the manually entered amount
+      tax_amount = flt(row.tax_amount);
+    }
+
+    tax_amount = flt(tax_amount);
+    row.tax_amount = tax_amount;
+
+    if (row.add_deduct_tax === "Deduct") {
+      running_total -= tax_amount;
+      deducted += tax_amount;
+    } else {
+      running_total += tax_amount;
+      added += tax_amount;
+    }
+    row.total = flt(running_total);
+  });
+
+  frm.refresh_field("invoice_taxes");
+  frm.set_value("net_total", net_total);
+  frm.set_value("taxes_and_charges_added", flt(added));
+  frm.set_value("taxes_and_charges_deducted", flt(deducted));
+  frm.set_value("total_taxes_and_charges", flt(added - deducted));
+
+  let discount_base =
+    frm.doc.apply_discount_on === "Grand Total" ? running_total : net_total;
+
+  let discount_amount = flt(frm.doc.discount_amount);
+  if (frm.doc.__discount_from_percentage !== false && frm.doc.additional_discount_percentage) {
+    discount_amount = flt((discount_base * flt(frm.doc.additional_discount_percentage)) / 100);
+  }
+
+  let grand_total =
+    frm.doc.apply_discount_on === "Grand Total"
+      ? running_total - discount_amount
+      : net_total - discount_amount + (added - deducted);
+
+  grand_total = flt(grand_total);
+
+  frm.set_value("discount_amount", discount_amount);
+  frm.set_value("invoice_total_amount", grand_total);
+  frm.set_value(
+    "difference",
+    Math.abs(grand_total - flt(frm.doc.extracted_amount))
+  );
 }
