@@ -42,6 +42,57 @@ def get_expense_account(item_code=None, company=None):
 
 
 @frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_mode_of_payment_query(doctype, txt, searchfield, start, page_len, filters):
+    """
+    Link-field query for Mode of Payment: only lists modes that have a
+    Mode of Payment Account row configured for the given company, so the
+    dropdown never offers a mode that Cash/Bank Account auto-fill can't
+    resolve for that company.
+    """
+    company = filters.get("company") if filters else None
+
+    return frappe.db.sql(
+        """
+        select distinct mop.name
+        from `tabMode of Payment` mop
+        inner join `tabMode of Payment Account` mopa
+            on mopa.parent = mop.name and mopa.parenttype = 'Mode of Payment'
+        where mopa.company = %(company)s and mop.name like %(txt)s
+        order by mop.name
+        limit %(page_len)s offset %(start)s
+        """,
+        {
+            "company": company,
+            "start": start,
+            "page_len": page_len,
+            "txt": "%%%s%%" % txt,
+        },
+    )
+
+
+@frappe.whitelist()
+def is_mode_of_payment_valid_for_company(mode_of_payment=None, company=None):
+    """
+    Whether the given Mode of Payment has a Mode of Payment Account row
+    configured for the given company (i.e. still valid after a Company
+    change on the form).
+    """
+    if not mode_of_payment or not company:
+        return {"valid": False}
+
+    exists = frappe.db.exists(
+        "Mode of Payment Account",
+        {
+            "parent": mode_of_payment,
+            "parenttype": "Mode of Payment",
+            "company": company,
+        },
+    )
+    return {"valid": bool(exists)}
+
+
+@frappe.whitelist()
 def get_default_tax_account(company=None):
     """
     Best-effort default Account Head for a tax line, reusing the company's

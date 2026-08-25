@@ -3,6 +3,12 @@ frappe.ui.form.on("Cvs Invoice Tool", {
     frm.set_df_property("generated_sales", "read_only", 1);
     frm.set_df_property("generated_purchase", "read_only", 1);
 
+    frm.set_query("mode_of_payment", () => ({
+      query:
+        "ipconnex_ai_invoice.ipconnex_ai_invoice.doctype.cvs_invoice_tool.cvs_invoice_tool.get_mode_of_payment_query",
+      filters: { company: frm.doc.company },
+    }));
+
     toggle_mode_of_payment(frm);
     toggle_cash_bank_account(frm);
 
@@ -295,7 +301,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
   },
 
   company(frm) {
-    fetch_cash_bank_account(frm);
+    handle_company_change_for_mode_of_payment(frm);
     fetch_default_expense_account(frm);
   },
 
@@ -326,6 +332,39 @@ frappe.ui.form.on("Cvs Invoice Tool", {
       });
   },
 });
+
+// -----------------------------------------------
+// Company changed: clear Mode of Payment (and its Cash/Bank Account)
+// if it has no Mode of Payment Account row for the new Company.
+// -----------------------------------------------
+function handle_company_change_for_mode_of_payment(frm) {
+  if (!frm.doc.mode_of_payment) {
+    return;
+  }
+
+  if (!frm.doc.company) {
+    frm.set_value("mode_of_payment", "");
+    frm.set_value("cash_bank_account", "");
+    return;
+  }
+
+  frappe.call({
+    method:
+      "ipconnex_ai_invoice.ipconnex_ai_invoice.doctype.cvs_invoice_tool.cvs_invoice_tool.is_mode_of_payment_valid_for_company",
+    args: {
+      mode_of_payment: frm.doc.mode_of_payment,
+      company: frm.doc.company,
+    },
+    callback(r) {
+      if (r.message?.valid) {
+        fetch_cash_bank_account(frm);
+      } else {
+        frm.set_value("mode_of_payment", "");
+        frm.set_value("cash_bank_account", "");
+      }
+    },
+  });
+}
 
 // -----------------------------------------------
 // Auto-fetch: Cash/Bank Account from Mode of Payment + Company
