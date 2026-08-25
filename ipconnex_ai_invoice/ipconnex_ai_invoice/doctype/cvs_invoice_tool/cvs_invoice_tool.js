@@ -383,6 +383,10 @@ function fetch_cash_bank_account(frm) {
     method: "frappe.client.get_value",
     args: {
       doctype: "Mode of Payment Account",
+      // "parent" here is the parent DOCTYPE (for frappe.client.get_value's own
+      // permission check on this child table) — not to be confused with
+      // filters.parent below, which is the specific Mode of Payment record.
+      parent: "Mode of Payment",
       filters: {
         parent: frm.doc.mode_of_payment,
         company: frm.doc.company,
