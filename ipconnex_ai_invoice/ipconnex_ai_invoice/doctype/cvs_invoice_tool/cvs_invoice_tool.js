@@ -90,8 +90,9 @@ frappe.ui.form.on("Cvs Invoice Tool", {
             items.forEach((row) => {
               if (!row.amount || row.amount <= 0) return;
               invoice_items.push({
+                // Default Item (if set) takes priority over an AI-extracted item_code
                 item_code:
-                  row.item_code || frm.doc.invoice_default_item || "",
+                  frm.doc.invoice_default_item || row.item_code || "",
                 item_description:
                   row.item_description || row.item_name || "Auto-imported item",
                 item_qty: row.qty || 1,
@@ -708,7 +709,7 @@ function create_purchase_invoice(frm, inv_items) {
       let doc = {
         doctype: "Purchase Invoice",
         supplier: frm.doc.supplier_name,
-        posting_date: frm.doc.invoice_date,
+        posting_date: frm.doc.supplier_invoice_date || frm.doc.invoice_date,
         bill_no: frm.doc.supplier_invoice_no || "",
         bill_date: frm.doc.supplier_invoice_date || frm.doc.invoice_date,
         company: company_name,

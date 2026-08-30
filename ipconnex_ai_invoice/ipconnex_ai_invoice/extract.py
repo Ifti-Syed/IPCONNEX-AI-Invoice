@@ -62,13 +62,29 @@ def parse_and_clean_json(text):
     return None
 
 
+_ARABIC_INDIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
+_EXTENDED_ARABIC_INDIC_DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789")
+
+
+def _normalize_digits(v):
+    """
+    Convert Arabic-Indic (٠-٩) and Extended Arabic-Indic/Persian (۰-۹) digits to
+    Western digits. Bilingual Gulf invoices sometimes print quantities, rates,
+    amounts, dates, or invoice numbers using these digit forms even when the
+    model was instructed to convert them — this is a backend safety net.
+    """
+    if not isinstance(v, str):
+        return v
+    return v.translate(_ARABIC_INDIC_DIGITS).translate(_EXTENDED_ARABIC_INDIC_DIGITS)
+
+
 def _safe_float(v, default=0.0):
     try:
         if v is None or v == "":
             return float(default)
         # Remove thousand-separator commas (e.g. "1,234.56" → 1234.56)
         if isinstance(v, str):
-            v = v.replace(",", "").strip()
+            v = _normalize_digits(v).replace(",", "").strip()
         return float(v)
     except Exception:
         return float(default)
@@ -151,8 +167,8 @@ def normalize_and_validate(payload, allowed_companies, default_company):
     result = {
         "supplier": _safe_str(payload.get("supplier", "")),
         "company": _safe_str(payload.get("company", "")),
-        "bill_no": _safe_str(payload.get("bill_no", "")),
-        "bill_date": _safe_str(payload.get("bill_date", "")) or "YYYY-MM-DD",
+        "bill_no": _normalize_digits(_safe_str(payload.get("bill_no", ""))),
+        "bill_date": _normalize_digits(_safe_str(payload.get("bill_date", ""))) or "YYYY-MM-DD",
         "currency": _normalize_currency(_safe_str(payload.get("currency", ""))),
         "subtotal": _safe_float(payload.get("subtotal", 0.0)),
         "total_amount": _safe_float(payload.get("total_amount", 0.0)),
@@ -351,7 +367,7 @@ CRITICAL INSTRUCTIONS:
 You are an expert AI Invoice Extractor. Extract structured data from the provided invoice file and return it as a valid JSON object.
 
 LANGUAGE RULES (IMPORTANT):
-- Invoices may be in Arabic, English, or bilingual.
+- Invoices may be in Arabic, English, or bilingual (both languages printed on the same page/table).
 - DO NOT translate proper names: keep supplier and company names exactly as written (Arabic stays Arabic).
 - Extract numbers exactly as shown.
 - If labels are Arabic (e.g., رقم الفاتورة, تاريخ, المورد), map them to the same fields.
@@ -359,6 +375,15 @@ LANGUAGE RULES (IMPORTANT):
 - Item descriptions (item_name): copy them EXACTLY as printed, in their original language. Do NOT translate
   them into English or any other language — translation can change technical/product meaning. Only the
   structured ERP-facing fields (currency, dates, numbers) should be normalized to standard formats.
+- BILINGUAL / DUAL-LANGUAGE LAYOUTS: when a single invoice prints BOTH an Arabic and an English version of
+  the same field, label, or table (e.g. a header row with the label in both languages, or the whole item
+  table repeated in English then Arabic) — extract that value or row ONCE. Never emit duplicate items or
+  duplicate field values just because the same line is printed twice in two languages. Prefer the version
+  in whichever language contains the clearer/more legible printed digits or text for that specific field;
+  if both are equally clear, use the English text for text fields where present, but ALWAYS keep numeric
+  values, dates, and amounts identical regardless of which language block they were read from.
+- If a field (supplier name, item description, etc.) is genuinely only printed in Arabic with no English
+  equivalent, extract it in Arabic as-is — do not leave it blank and do not transliterate.
 
 MULTI-PAGE / SUPPORTING DOCUMENT RULES (CRITICAL):
 - A single PDF may contain the actual invoice PLUS other pages: delivery notes, goods-received notes,
@@ -381,7 +406,9 @@ STRICT EXTRACTION RULES:
    - Strings: Use empty string ""
    - Integers: Use 0
    - Floats: Use 0.0
-5. Date Format: Always use "YYYY-MM-DD" format for bill_date.
+5. Date Format: Always use "YYYY-MM-DD" format for bill_date. If a printed date is numeric and ambiguous
+   (e.g. "05/06/2025"), interpret it as DD/MM/YYYY (the standard order on Gulf/Middle-Eastern invoices,
+   Arabic or English) unless the month is spelled out as a name, which removes the ambiguity.
 6. Currency: Extract currency information when available (AED, QAR, SAR, EUR, USD, etc.)
 7. Arrays:
    - If no items found, use empty array: "items": []
@@ -430,7 +457,10 @@ LINE ITEM EXTRACTION RULES (CRITICAL — READ CAREFULLY):
    - Set amount = the printed amount
 7. If a description wraps across two visual lines, treat them as ONE item — join the text.
 8. Leave "item_code" and "expense_account" as "" for every item — do not guess these values.
-9. NUMBERS: Remove thousand-separator commas before parsing (e.g. "1,234.56" → 1234.56).
+9. NUMBERS: Remove thousand-separator commas before parsing (e.g. "1,234.56" → 1234.56). If any number
+   (quantity, rate, amount, date, invoice no., etc.) is printed using Arabic-Indic digits (٠١٢٣٤٥٦٧٨٩),
+   convert each digit to its Western equivalent (٠=0 ١=1 ٢=2 ٣=3 ٤=4 ٥=5 ٦=6 ٧=7 ٨=8 ٩=9) before including
+   it in the JSON — never mix digit systems within a single number.
 10. SELF-VERIFICATION (perform this before outputting):
     a. Count every product/service row in the invoice table (excluding headers, subtotals, totals, tax rows). Your "items" array MUST have exactly that many entries.
     b. For each item, verify qty × rate ≈ amount (within rounding). If not, re-check which printed column you read for rate vs amount.
