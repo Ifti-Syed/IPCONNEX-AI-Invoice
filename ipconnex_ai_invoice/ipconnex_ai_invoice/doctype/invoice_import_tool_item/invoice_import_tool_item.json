@@ -13,7 +13,8 @@
   "item_qty",
   "item_rate",
   "item_amount",
-  "expense_account"
+  "expense_account",
+  "cost_center"
  ],
  "fields": [
   {
@@ -61,6 +62,13 @@
    "in_list_view": 1,
    "label": "Expense Account",
    "options": "Account"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cost Center",
+   "options": "Cost Center"
   }
  ],
  "istable": 1,

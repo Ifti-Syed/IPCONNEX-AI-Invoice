@@ -42,6 +42,40 @@ def get_expense_account(item_code=None, company=None):
 
 
 @frappe.whitelist()
+def get_default_cost_center(item_code=None, company=None):
+    """
+    Resolve the default (buying) Cost Center for an Item, reusing ERPNext's own
+    fallback chain: Item defaults (for company) -> Item Group defaults
+    (for company) -> Company's default Cost Center.
+    Never hardcodes a cost center.
+    """
+    if not company:
+        return {"cost_center": ""}
+
+    cost_center = None
+
+    if item_code:
+        cost_center = frappe.db.get_value(
+            "Item Default",
+            {"parent": item_code, "parenttype": "Item", "company": company},
+            "buying_cost_center",
+        )
+        if not cost_center:
+            item_group = frappe.db.get_value("Item", item_code, "item_group")
+            if item_group:
+                cost_center = frappe.db.get_value(
+                    "Item Default",
+                    {"parent": item_group, "parenttype": "Item Group", "company": company},
+                    "buying_cost_center",
+                )
+
+    if not cost_center:
+        cost_center = frappe.db.get_value("Company", company, "cost_center")
+
+    return {"cost_center": cost_center or ""}
+
+
+@frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_mode_of_payment_query(doctype, txt, searchfield, start, page_len, filters):
     """

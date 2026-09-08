@@ -101,6 +101,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
                 units_of_measure: row.uom || "Ea",
                 expense_account:
                   frm.doc.default_expense_account || row.expense_account || "",
+                cost_center: frm.doc.default_cost_center || "",
               });
               total += Math.round(row.amount * 100);
             });
@@ -272,6 +273,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
             item.income_account = frm.doc.income_account;
           } else {
             item.expense_account = row.expense_account;
+            item.cost_center = row.cost_center || frm.doc.default_cost_center || "";
           }
 
           inv_items.push(item);
@@ -304,10 +306,21 @@ frappe.ui.form.on("Cvs Invoice Tool", {
   company(frm) {
     handle_company_change_for_mode_of_payment(frm);
     fetch_default_expense_account(frm);
+    fetch_default_cost_center(frm);
   },
 
   invoice_default_item(frm) {
     fetch_default_expense_account(frm);
+    fetch_default_cost_center(frm);
+    apply_default_item_to_items(frm);
+  },
+
+  default_expense_account(frm) {
+    apply_default_expense_account_to_items(frm);
+  },
+
+  default_cost_center(frm) {
+    apply_default_cost_center_to_items(frm);
   },
 
   apply_discount_on(frm) {
@@ -315,12 +328,6 @@ frappe.ui.form.on("Cvs Invoice Tool", {
   },
 
   additional_discount_percentage(frm) {
-    frm.doc.__discount_from_percentage = true;
-    recalc_taxes_and_totals(frm);
-  },
-
-  discount_amount(frm) {
-    frm.doc.__discount_from_percentage = false;
     recalc_taxes_and_totals(frm);
   },
 
@@ -450,6 +457,63 @@ function fetch_default_expense_account(frm) {
       }
     },
   });
+}
+
+// -----------------------------------------------
+// Auto-fetch: Default Cost Center from Default Item/Item Group/Company defaults
+// -----------------------------------------------
+function fetch_default_cost_center(frm) {
+  if (!frm.doc.company || frm.doc.invoice_type !== "Purchase") {
+    return;
+  }
+
+  frappe.call({
+    method:
+      "ipconnex_ai_invoice.ipconnex_ai_invoice.doctype.cvs_invoice_tool.cvs_invoice_tool.get_default_cost_center",
+    args: {
+      item_code: frm.doc.invoice_default_item || "",
+      company: frm.doc.company,
+    },
+    callback(r) {
+      frm.set_value("default_cost_center", r.message?.cost_center || "");
+    },
+  });
+}
+
+// -----------------------------------------------
+// Push parent-level defaults down into every existing Item row.
+// Called whenever Default Item / Default Expense Account / Default Cost
+// Center changes on the parent, so already-added rows stay in sync
+// instead of only applying to rows added after the change.
+// -----------------------------------------------
+function apply_default_item_to_items(frm) {
+  if (!frm.doc.invoice_default_item || !(frm.doc.invoice_items || []).length) {
+    return;
+  }
+  frm.doc.invoice_items.forEach((row) => {
+    row.item_code = frm.doc.invoice_default_item;
+  });
+  frm.refresh_field("invoice_items");
+}
+
+function apply_default_expense_account_to_items(frm) {
+  if (!frm.doc.default_expense_account || !(frm.doc.invoice_items || []).length) {
+    return;
+  }
+  frm.doc.invoice_items.forEach((row) => {
+    row.expense_account = frm.doc.default_expense_account;
+  });
+  frm.refresh_field("invoice_items");
+}
+
+function apply_default_cost_center_to_items(frm) {
+  if (!frm.doc.default_cost_center || !(frm.doc.invoice_items || []).length) {
+    return;
+  }
+  frm.doc.invoice_items.forEach((row) => {
+    row.cost_center = frm.doc.default_cost_center;
+  });
+  frm.refresh_field("invoice_items");
 }
 
 // -----------------------------------------------
@@ -801,29 +865,47 @@ frappe.ui.form.on("Invoice Import Tool Item", {
   invoice_items_remove(frm) {
     recalc_items(frm);
   },
+  invoice_items_add(frm, cdt, cdn) {
+    let row = frappe.get_doc(cdt, cdn);
+    if (frm.doc.invoice_default_item) row.item_code = frm.doc.invoice_default_item;
+    if (frm.doc.default_expense_account) row.expense_account = frm.doc.default_expense_account;
+    if (frm.doc.default_cost_center) row.cost_center = frm.doc.default_cost_center;
+  },
   item_code(frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
-    if (
-      !row.item_code ||
-      row.expense_account ||
-      !frm.doc.company ||
-      frm.doc.invoice_type !== "Purchase"
-    ) {
+    if (!row.item_code || !frm.doc.company || frm.doc.invoice_type !== "Purchase") {
       return;
     }
-    frappe.call({
-      method:
-        "ipconnex_ai_invoice.ipconnex_ai_invoice.doctype.cvs_invoice_tool.cvs_invoice_tool.get_expense_account",
-      args: {
-        item_code: row.item_code,
-        company: frm.doc.company,
-      },
-      callback(r) {
-        if (r.message?.expense_account) {
-          frappe.model.set_value(cdt, cdn, "expense_account", r.message.expense_account);
-        }
-      },
-    });
+    if (!row.expense_account) {
+      frappe.call({
+        method:
+          "ipconnex_ai_invoice.ipconnex_ai_invoice.doctype.cvs_invoice_tool.cvs_invoice_tool.get_expense_account",
+        args: {
+          item_code: row.item_code,
+          company: frm.doc.company,
+        },
+        callback(r) {
+          if (r.message?.expense_account) {
+            frappe.model.set_value(cdt, cdn, "expense_account", r.message.expense_account);
+          }
+        },
+      });
+    }
+    if (!row.cost_center) {
+      frappe.call({
+        method:
+          "ipconnex_ai_invoice.ipconnex_ai_invoice.doctype.cvs_invoice_tool.cvs_invoice_tool.get_default_cost_center",
+        args: {
+          item_code: row.item_code,
+          company: frm.doc.company,
+        },
+        callback(r) {
+          if (r.message?.cost_center) {
+            frappe.model.set_value(cdt, cdn, "cost_center", r.message.cost_center);
+          }
+        },
+      });
+    }
   },
 });
 
@@ -926,10 +1008,11 @@ function recalc_taxes_and_totals(frm) {
   let discount_base =
     frm.doc.apply_discount_on === "Grand Total" ? running_total : net_total;
 
-  let discount_amount = flt(frm.doc.discount_amount);
-  if (frm.doc.__discount_from_percentage !== false && frm.doc.additional_discount_percentage) {
-    discount_amount = flt((discount_base * flt(frm.doc.additional_discount_percentage)) / 100);
-  }
+  // discount_amount is a computed/hidden field, always derived from the
+  // (user-facing) discount percentage — there is no manual flat-amount input.
+  let discount_amount = frm.doc.additional_discount_percentage
+    ? flt((discount_base * flt(frm.doc.additional_discount_percentage)) / 100)
+    : 0;
 
   let grand_total =
     frm.doc.apply_discount_on === "Grand Total"
