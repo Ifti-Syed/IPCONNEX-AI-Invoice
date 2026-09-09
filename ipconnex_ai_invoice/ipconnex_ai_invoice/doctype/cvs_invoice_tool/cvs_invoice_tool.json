@@ -8,11 +8,10 @@
     "engine": "InnoDB",
     "field_order": [
         "section_break_details",
-        "invoice_file",
-        "extract_data",
-        "section_break_details_1",
         "gpt_account",
         "company",
+        "invoice_file",
+        "extract_data",
         "invoice_type",
         "column_break_details_2",
         "supplier_name",
@@ -56,10 +55,6 @@
             "fieldname": "section_break_details",
             "fieldtype": "Section Break",
             "label": "Invoice Details"
-        },
-        {
-            "fieldname": "section_break_details_1",
-            "fieldtype": "Section Break"
         },
         {
             "fieldname": "gpt_account",
