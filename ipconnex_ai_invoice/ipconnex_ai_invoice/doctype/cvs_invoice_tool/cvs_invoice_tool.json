@@ -7,41 +7,55 @@
     "editable_grid": 1,
     "engine": "InnoDB",
     "field_order": [
+        "section_break_details",
         "gpt_account",
         "company",
         "invoice_file",
-        "invoice_type",
-        "invoice_default_item",
-        "default_expense_account",
-        "default_cost_center",
         "extract_data",
-        "customer_name",
+        "invoice_type",
+        "column_break_details_2",
         "supplier_name",
+        "customer_name",
         "income_account",
-        "currency",
         "invoice_date",
         "supplier_invoice_no",
         "supplier_invoice_date",
+        "column_break_details_3",
+        "invoice_default_item",
+        "default_expense_account",
+        "default_cost_center",
+        "column_break_details_4",
         "is_paid",
+        "mode_of_payment",
+        "cash_bank_account",
+        "section_break_items",
         "invoice_items",
-        "net_total",
+        "section_break_taxes",
         "invoice_taxes",
+        "section_break_totals",
+        "net_total",
         "taxes_and_charges_added",
         "taxes_and_charges_deducted",
         "total_taxes_and_charges",
+        "column_break_totals_2",
         "apply_discount_on",
         "additional_discount_percentage",
         "discount_amount",
         "invoice_total_amount",
+        "column_break_totals_3",
+        "currency",
+        "generate_invoice",
         "extracted_amount",
         "difference",
-        "generate_invoice",
         "generated_sales",
-        "generated_purchase",
-        "mode_of_payment",
-        "cash_bank_account"
+        "generated_purchase"
     ],
     "fields": [
+        {
+            "fieldname": "section_break_details",
+            "fieldtype": "Section Break",
+            "label": "Invoice Details"
+        },
         {
             "fieldname": "gpt_account",
             "fieldtype": "Link",
@@ -98,11 +112,8 @@
             "label": "Extract Data"
         },
         {
-            "depends_on": "eval:doc.invoice_type=='Sales'",
-            "fieldname": "customer_name",
-            "fieldtype": "Link",
-            "label": "Customer",
-            "options": "Customer"
+            "fieldname": "column_break_details_2",
+            "fieldtype": "Column Break"
         },
         {
             "depends_on": "eval:doc.invoice_type=='Purchase'",
@@ -113,17 +124,17 @@
         },
         {
             "depends_on": "eval:doc.invoice_type=='Sales'",
+            "fieldname": "customer_name",
+            "fieldtype": "Link",
+            "label": "Customer",
+            "options": "Customer"
+        },
+        {
+            "depends_on": "eval:doc.invoice_type=='Sales'",
             "fieldname": "income_account",
             "fieldtype": "Link",
             "label": "Income Account",
             "options": "Account"
-        },
-        {
-            "depends_on": "eval:doc.company",
-            "fieldname": "currency",
-            "fieldtype": "Link",
-            "label": "Currency",
-            "options": "Currency"
         },
         {
             "fieldname": "invoice_date",
@@ -143,10 +154,34 @@
             "label": "Supplier Invoice Date"
         },
         {
+            "fieldname": "column_break_details_3",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "column_break_details_4",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "section_break_items",
+            "fieldtype": "Section Break",
+            "label": "Items"
+        },
+        {
             "fieldname": "invoice_items",
             "fieldtype": "Table",
             "label": "Items",
             "options": "Invoice Import Tool Item"
+        },
+        {
+            "depends_on": "eval:doc.invoice_type=='Purchase'",
+            "fieldname": "section_break_taxes",
+            "fieldtype": "Section Break",
+            "label": "Taxes and Charges"
+        },
+        {
+            "fieldname": "section_break_totals",
+            "fieldtype": "Section Break",
+            "label": "Totals"
         },
         {
             "fieldname": "net_total",
@@ -155,6 +190,21 @@
             "label": "Net Total",
             "options": "currency",
             "read_only": 1
+        },
+        {
+            "fieldname": "column_break_totals_2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "column_break_totals_3",
+            "fieldtype": "Column Break"
+        },
+        {
+            "depends_on": "eval:doc.company",
+            "fieldname": "currency",
+            "fieldtype": "Link",
+            "label": "Currency",
+            "options": "Currency"
         },
         {
             "depends_on": "eval:doc.invoice_type=='Purchase'",
