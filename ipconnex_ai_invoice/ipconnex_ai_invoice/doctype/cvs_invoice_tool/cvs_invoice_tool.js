@@ -573,24 +573,33 @@ function handle_erp_error(err, fallback_title) {
 // -----------------------------------------------
 // Invoice Details layout: Frappe splits a section's columns exactly evenly
 // (12/N grid) with no per-column width property, so giving Column 1 a bit
-// more room than Columns 2-4 needs a small CSS nudge here rather than a
+// more room than the others needs a small CSS nudge here rather than a
 // doctype-level setting. Anchored to fields that are always visible in each
 // column (not depends_on-gated) so this holds regardless of Invoice Type.
+// Only 3 columns now (Is Paid moved into Column 1, Mode of Payment/Cash-Bank
+// Account moved into Column 3) — a 4th column was wrapping onto its own row
+// on narrower screens, since 4 real columns need more horizontal room than
+// 3. box-sizing is forced to border-box so each column's padding is counted
+// inside its % width instead of added on top — the previous 4-column version
+// of this could creep past 100% total width (padding on top of the percentages)
+// and that's what pushed the last column onto a new line.
 // -----------------------------------------------
 function adjust_invoice_details_column_widths(frm) {
   let col1 = frm.get_field("gpt_account")?.$wrapper?.closest(".form-column");
   let col2 = frm.get_field("invoice_date")?.$wrapper?.closest(".form-column");
   let col3 = frm.get_field("invoice_default_item")?.$wrapper?.closest(".form-column");
-  let col4 = frm.get_field("is_paid")?.$wrapper?.closest(".form-column");
 
   [
-    [col1, "30%"],
-    [col2, "24%"],
-    [col3, "23%"],
-    [col4, "23%"],
+    [col1, "36%"],
+    [col2, "32%"],
+    [col3, "32%"],
   ].forEach(([col, width]) => {
     if (col && col.length) {
-      col.css({ flex: `0 0 ${width}`, "max-width": width });
+      col.css({
+        "box-sizing": "border-box",
+        flex: `0 0 ${width}`,
+        "max-width": width,
+      });
     }
   });
 }

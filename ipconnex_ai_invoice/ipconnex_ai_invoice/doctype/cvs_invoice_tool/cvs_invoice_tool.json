@@ -13,6 +13,7 @@
         "invoice_file",
         "extract_data",
         "invoice_type",
+        "is_paid",
         "column_break_details_2",
         "supplier_name",
         "customer_name",
@@ -24,8 +25,6 @@
         "invoice_default_item",
         "default_expense_account",
         "default_cost_center",
-        "column_break_details_4",
-        "is_paid",
         "mode_of_payment",
         "cash_bank_account",
         "section_break_items",
@@ -155,10 +154,6 @@
         },
         {
             "fieldname": "column_break_details_3",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "column_break_details_4",
             "fieldtype": "Column Break"
         },
         {
