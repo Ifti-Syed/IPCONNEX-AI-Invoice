@@ -4,7 +4,12 @@ from frappe.model.document import Document
 from frappe import _
 
 class CvsInvoiceTool(Document):
-    pass
+    def validate(self):
+        # Backward compatibility: "Purchase" was renamed to "Purchase Invoice".
+        # Self-heal any record still carrying the old value the next time it's
+        # saved, instead of failing Select validation or requiring a manual fix.
+        if self.invoice_type == "Purchase":
+            self.invoice_type = "Purchase Invoice"
 
 
 @frappe.whitelist()

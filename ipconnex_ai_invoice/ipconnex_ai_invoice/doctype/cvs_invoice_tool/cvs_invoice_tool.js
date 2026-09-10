@@ -1,7 +1,37 @@
+// -----------------------------------------------
+// Invoice Type helpers
+// "Purchase" is the legacy stored value (pre-rename), tolerated forever on
+// old records; "Purchase Invoice" is the current value for that same flow.
+// "Purchase Receipt" is a distinct, separate flow (pushes to ERPNext's
+// standard Purchase Receipt doctype instead of Purchase Invoice).
+// -----------------------------------------------
+function is_any_purchase_type(invoice_type) {
+  return (
+    invoice_type === "Purchase" ||
+    invoice_type === "Purchase Invoice" ||
+    invoice_type === "Purchase Receipt"
+  );
+}
+
+function is_purchase_invoice_type(invoice_type) {
+  return invoice_type === "Purchase" || invoice_type === "Purchase Invoice";
+}
+
 frappe.ui.form.on("Cvs Invoice Tool", {
   refresh(frm) {
     frm.set_df_property("generated_sales", "read_only", 1);
     frm.set_df_property("generated_purchase", "read_only", 1);
+    frm.set_df_property("generated_purchase_receipt", "read_only", 1);
+
+    // Hide the legacy "Purchase" value from the dropdown — it's only kept in
+    // the doctype's own options list so old records don't fail Select
+    // validation; every document is saved as "Purchase Invoice" going forward
+    // (see CvsInvoiceTool.validate() and the rename_purchase_to_purchase_invoice patch).
+    frm.set_df_property("invoice_type", "options", [
+      "Purchase Invoice",
+      "Purchase Receipt",
+      "Sales",
+    ]);
 
     frm.set_query("mode_of_payment", () => ({
       query:
@@ -9,6 +39,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
       filters: { company: frm.doc.company },
     }));
 
+    toggle_is_paid(frm);
     toggle_mode_of_payment(frm);
     toggle_cash_bank_account(frm);
 
@@ -63,7 +94,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
 
             const data = r.message.data;
 
-            if (frm.doc.invoice_type === "Purchase") {
+            if (is_any_purchase_type(frm.doc.invoice_type)) {
               frm.set_value("supplier_name", data.supplier || "");
               frm.set_value("supplier_invoice_no", data.bill_no || "");
               frm.set_value("supplier_invoice_date", data.bill_date || "");
@@ -109,7 +140,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
             frm.set_value("invoice_items", invoice_items);
             frm.refresh_field("invoice_items");
 
-            if (frm.doc.invoice_type === "Purchase") {
+            if (is_any_purchase_type(frm.doc.invoice_type)) {
               apply_extracted_taxes(frm, data.taxes || []);
               apply_extracted_discount(frm, data, total);
             }
@@ -147,16 +178,16 @@ frappe.ui.form.on("Cvs Invoice Tool", {
         if (!frm.doc.invoice_type) {
           frappe.msgprint({
             title: __("Invoice Type Required"),
-            message: __("Please select an Invoice Type (Purchase or Sales)."),
+            message: __("Please select a Type (Purchase Invoice, Purchase Receipt, or Sales)."),
             indicator: "orange",
           });
           return;
         }
 
-        if (frm.doc.invoice_type === "Purchase" && !frm.doc.supplier_name) {
+        if (is_any_purchase_type(frm.doc.invoice_type) && !frm.doc.supplier_name) {
           frappe.msgprint({
             title: __("Supplier Required"),
-            message: __("Please select a Supplier before generating a Purchase Invoice."),
+            message: __("Please select a Supplier before generating the invoice."),
             indicator: "orange",
           });
           return;
@@ -200,7 +231,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
 
         if (
           frm.doc.is_paid &&
-          frm.doc.invoice_type === "Purchase" &&
+          is_purchase_invoice_type(frm.doc.invoice_type) &&
           !frm.doc.cash_bank_account
         ) {
           frappe.msgprint({
@@ -213,7 +244,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
           return;
         }
 
-        if (frm.doc.invoice_type === "Purchase") {
+        if (is_any_purchase_type(frm.doc.invoice_type)) {
           for (let row of frm.doc.invoice_taxes || []) {
             if (!row.account_head) {
               frappe.msgprint({
@@ -249,7 +280,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
             });
             return;
           }
-          if (!row.expense_account && frm.doc.invoice_type === "Purchase") {
+          if (!row.expense_account && is_any_purchase_type(frm.doc.invoice_type)) {
             frappe.msgprint({
               title: __("Missing Expense Account"),
               message: __(
@@ -283,7 +314,10 @@ frappe.ui.form.on("Cvs Invoice Tool", {
 
         if (frm.doc.invoice_type === "Sales") {
           create_sales_invoice(frm, inv_items);
+        } else if (frm.doc.invoice_type === "Purchase Receipt") {
+          create_purchase_receipt(frm, inv_items);
         } else {
+          // "Purchase" (legacy) and "Purchase Invoice"
           create_purchase_invoice(frm, inv_items);
         }
       });
@@ -295,6 +329,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
   },
 
   invoice_type(frm) {
+    toggle_is_paid(frm);
     toggle_cash_bank_account(frm);
     recalc_taxes_and_totals(frm);
   },
@@ -382,7 +417,7 @@ function fetch_cash_bank_account(frm) {
     !frm.doc.is_paid ||
     !frm.doc.mode_of_payment ||
     !frm.doc.company ||
-    frm.doc.invoice_type !== "Purchase"
+    !is_purchase_invoice_type(frm.doc.invoice_type)
   ) {
     return;
   }
@@ -427,7 +462,7 @@ function fetch_default_expense_account(frm) {
   if (
     !frm.doc.invoice_default_item ||
     !frm.doc.company ||
-    frm.doc.invoice_type !== "Purchase"
+    !is_any_purchase_type(frm.doc.invoice_type)
   ) {
     return;
   }
@@ -463,7 +498,7 @@ function fetch_default_expense_account(frm) {
 // Auto-fetch: Default Cost Center from Default Item/Item Group/Company defaults
 // -----------------------------------------------
 function fetch_default_cost_center(frm) {
-  if (!frm.doc.company || frm.doc.invoice_type !== "Purchase") {
+  if (!frm.doc.company || !is_any_purchase_type(frm.doc.invoice_type)) {
     return;
   }
 
@@ -580,10 +615,22 @@ function toggle_mode_of_payment(frm) {
 }
 
 function toggle_cash_bank_account(frm) {
-  let show = frm.doc.is_paid && frm.doc.invoice_type === "Purchase";
+  let show = frm.doc.is_paid && is_purchase_invoice_type(frm.doc.invoice_type);
   frm.toggle_display("cash_bank_account", show);
   if (!show && frm.doc.cash_bank_account) {
     frm.set_value("cash_bank_account", "");
+  }
+}
+
+// Purchase Receipt has no payment/cash concept in ERPNext at all — hide
+// "Is Paid" (and by extension Mode of Payment / Cash-Bank Account, via the
+// toggles above) when that Type is selected. Stays visible for Purchase
+// Invoice and Sales, unchanged.
+function toggle_is_paid(frm) {
+  let show = frm.doc.invoice_type !== "Purchase Receipt";
+  frm.toggle_display("is_paid", show);
+  if (!show && frm.doc.is_paid) {
+    frm.set_value("is_paid", 0);
   }
 }
 
@@ -853,6 +900,96 @@ function create_purchase_invoice(frm, inv_items) {
 }
 
 // -----------------------------------------------
+// Purchase Receipt Creation
+// Purchase Receipt (unlike Purchase Invoice) has no credit_to/payable-account
+// concept and no is_paid/mode_of_payment/cash_bank_account concept at all in
+// ERPNext — none of that is sent here. It also has no "bill_no" field; the
+// closest standard equivalent for the extracted Supplier Invoice No is
+// supplier_delivery_note. Item rows deliberately leave "warehouse" unset:
+// ERPNext's own set_missing_item_details() resolves it from Item Default ->
+// Item Group Default -> Stock Settings, the same as a document created by
+// hand in the desk UI, and throws its own standard "Row #N: Warehouse is
+// mandatory for stock Item X" error if nothing resolves — no default is
+// invented here.
+// -----------------------------------------------
+function create_purchase_receipt(frm, inv_items) {
+  frappe.dom.freeze(__("Creating Purchase Receipt — please wait..."));
+
+  let doc = {
+    doctype: "Purchase Receipt",
+    supplier: frm.doc.supplier_name,
+    posting_date: frm.doc.supplier_invoice_date || frm.doc.invoice_date,
+    company: frm.doc.company,
+    currency: frm.doc.currency,
+    items: inv_items,
+  };
+
+  if (frm.doc.supplier_invoice_no) {
+    doc.supplier_delivery_note = frm.doc.supplier_invoice_no;
+  }
+
+  if ((frm.doc.invoice_taxes || []).length) {
+    doc.taxes = frm.doc.invoice_taxes.map((row) => ({
+      add_deduct_tax: row.add_deduct_tax || "Add",
+      charge_type: row.type || "Actual",
+      account_head: row.account_head,
+      description: row.description || __("Tax"),
+      rate: row.rate || 0,
+      tax_amount: row.tax_amount || 0,
+    }));
+  }
+
+  if (frm.doc.additional_discount_percentage || frm.doc.discount_amount) {
+    doc.apply_discount_on = frm.doc.apply_discount_on || "Net Total";
+    doc.additional_discount_percentage = frm.doc.additional_discount_percentage || 0;
+    doc.discount_amount = frm.doc.discount_amount || 0;
+  }
+
+  // Wrap frappe.call in a native Promise to preserve .finally() on the chain
+  new Promise((resolve, reject) => {
+    frappe.call({
+      method: "frappe.client.insert",
+      args: { doc },
+      callback: (r) => {
+        if (r?.message) resolve(r);
+        else reject(new Error(__("No response from server.")));
+      },
+      error: reject,
+    });
+  })
+    .then((r) => {
+      if (!r?.message) throw new Error(__("No response from server."));
+      frm.set_value("generated_purchase_receipt", r.message.name);
+      return attach_file(frm, "Purchase Receipt", r.message.name).then(
+        () => r.message
+      );
+    })
+    .then((doc) => frm.save().then(() => doc))
+    .then((doc) => {
+      frappe.dom.unfreeze();
+      frappe.show_alert(
+        {
+          message: __(
+            "Purchase Receipt {0} created successfully",
+            [
+              `<a href="/app/purchase-receipt/${doc.name}" target="_blank">${doc.name}</a>`,
+            ]
+          ),
+          indicator: "green",
+        },
+        8
+      );
+    })
+    .catch((err) => {
+      frappe.dom.unfreeze();
+      handle_erp_error(err, __("Purchase Receipt Creation Failed"));
+    })
+    .finally(() => {
+      $("button[data-fieldname='generate_invoice']").prop("disabled", false);
+    });
+}
+
+// -----------------------------------------------
 // Item Table Recalculation
 // -----------------------------------------------
 frappe.ui.form.on("Invoice Import Tool Item", {
@@ -873,7 +1010,7 @@ frappe.ui.form.on("Invoice Import Tool Item", {
   },
   item_code(frm, cdt, cdn) {
     let row = frappe.get_doc(cdt, cdn);
-    if (!row.item_code || !frm.doc.company || frm.doc.invoice_type !== "Purchase") {
+    if (!row.item_code || !frm.doc.company || !is_any_purchase_type(frm.doc.invoice_type)) {
       return;
     }
     if (!row.expense_account) {
@@ -947,7 +1084,7 @@ frappe.ui.form.on("Invoice Import Tool Tax", {
 });
 
 function recalc_taxes_and_totals(frm) {
-  if (frm.doc.invoice_type !== "Purchase") {
+  if (!is_any_purchase_type(frm.doc.invoice_type)) {
     let total = 0;
     (frm.doc.invoice_items || []).forEach((row) => {
       total += flt(row.item_amount);

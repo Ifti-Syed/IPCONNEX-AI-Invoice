@@ -1,0 +1,2 @@
+[pre_model_sync]
+ipconnex_ai_invoice.ipconnex_ai_invoice.patches.rename_purchase_to_purchase_invoice
