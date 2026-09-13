@@ -726,7 +726,22 @@ function attach_file(frm, doctype, docname) {
       attached_to_doctype: doctype,
       attached_to_name: docname,
     })
-    .catch(() => {});
+    .catch(() => {
+      // Non-fatal: the generated document itself is already created at this
+      // point. This only fails if the original uploaded file is no longer on
+      // disk at frm.doc.invoice_file (e.g. it was removed/replaced outside
+      // this form) — let the user know rather than failing silently.
+      frappe.show_alert(
+        {
+          message: __(
+            "{0} was created, but the original invoice file could not be attached to it — the uploaded file may no longer be available. You can attach it manually if needed.",
+            [docname]
+          ),
+          indicator: "orange",
+        },
+        8
+      );
+    });
 }
 
 // -----------------------------------------------
