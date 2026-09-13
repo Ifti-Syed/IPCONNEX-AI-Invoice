@@ -17,6 +17,15 @@ function is_purchase_invoice_type(invoice_type) {
   return invoice_type === "Purchase" || invoice_type === "Purchase Invoice";
 }
 
+// "Generate Invoice" -> "Generate <Type>", e.g. "Generate Purchase Receipt".
+// Falls back to the generic label until a Type is chosen.
+function set_generate_invoice_label(frm) {
+  let label = frm.doc.invoice_type
+    ? __("Generate {0}", [frm.doc.invoice_type])
+    : __("Generate Invoice");
+  frm.set_df_property("generate_invoice", "label", label);
+}
+
 frappe.ui.form.on("Cvs Invoice Tool", {
   refresh(frm) {
     frm.set_df_property("generated_sales", "read_only", 1);
@@ -39,6 +48,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
       filters: { company: frm.doc.company },
     }));
 
+    set_generate_invoice_label(frm);
     toggle_is_paid(frm);
     toggle_mode_of_payment(frm);
     toggle_cash_bank_account(frm);
@@ -303,6 +313,9 @@ frappe.ui.form.on("Cvs Invoice Tool", {
           if (frm.doc.invoice_type === "Sales") {
             item.income_account = frm.doc.income_account;
           } else {
+            // Purchase Invoice / Purchase Receipt: mirror the Description into
+            // item_name too, not just description.
+            item.item_name = row.item_description || "";
             item.expense_account = row.expense_account;
             item.cost_center = row.cost_center || frm.doc.default_cost_center || "";
           }
@@ -329,6 +342,7 @@ frappe.ui.form.on("Cvs Invoice Tool", {
   },
 
   invoice_type(frm) {
+    set_generate_invoice_label(frm);
     toggle_is_paid(frm);
     toggle_cash_bank_account(frm);
     recalc_taxes_and_totals(frm);
