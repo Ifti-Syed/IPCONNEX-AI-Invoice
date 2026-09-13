@@ -122,7 +122,6 @@ frappe.ui.form.on("Cvs Invoice Tool", {
                 indicator: "orange",
               });
             }
-            frm.set_value("extracted_amount", data.total_amount || 0);
 
             let items = data.items || [];
             let invoice_items = [];
@@ -1119,10 +1118,6 @@ function recalc_taxes_and_totals(frm) {
       total += flt(row.item_amount);
     });
     frm.set_value("invoice_total_amount", flt(total));
-    frm.set_value(
-      "difference",
-      Math.abs(flt(total) - flt(frm.doc.extracted_amount))
-    );
     return;
   }
 
@@ -1189,8 +1184,4 @@ function recalc_taxes_and_totals(frm) {
 
   frm.set_value("discount_amount", discount_amount);
   frm.set_value("invoice_total_amount", grand_total);
-  frm.set_value(
-    "difference",
-    Math.abs(grand_total - flt(frm.doc.extracted_amount))
-  );
 }

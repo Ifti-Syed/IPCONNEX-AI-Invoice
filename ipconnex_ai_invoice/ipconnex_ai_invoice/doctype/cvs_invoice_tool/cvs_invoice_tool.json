@@ -33,8 +33,6 @@
         "additional_discount_percentage",
         "discount_amount",
         "invoice_total_amount",
-        "extracted_amount",
-        "difference",
         "generate_invoice",
         "generated_sales",
         "generated_purchase",
@@ -213,18 +211,6 @@
             "fieldname": "invoice_total_amount",
             "fieldtype": "Currency",
             "label": "Total Amount",
-            "read_only": 1
-        },
-        {
-            "fieldname": "extracted_amount",
-            "fieldtype": "Currency",
-            "label": "Extracted Amount",
-            "read_only": 1
-        },
-        {
-            "fieldname": "difference",
-            "fieldtype": "Currency",
-            "label": "Difference",
             "read_only": 1
         },
         {
